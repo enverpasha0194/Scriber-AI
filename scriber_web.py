@@ -1,8 +1,9 @@
 import streamlit as st
 from openai import OpenAI
+import time
 
 # ============================================================
-# NGROK ADRESİNİ BURAYA TAM OLARAK YAPIŞTIR (v1 EKLEME!)
+# NGROK ADRESİNİ BURAYA TAM OLARAK YAPIŞTIR
 # ============================================================
 NGROK_URL = "https://hydropathical-duodecastyle-camron.ngrok-free.dev"
 
@@ -15,31 +16,101 @@ PAPERCLIP_URL = "https://emojigraph.org/media/joypixels/paperclip_1f4ce.png"
 st.set_page_config(page_title="SCRIBER AI", page_icon=LOGO_URL, layout="centered")
 
 # ==============================
-# CSS: TEMİZ TASARIM
+# CSS: WAVE ANIMATION & DARK THEME
 # ==============================
 st.markdown(f"""
 <style>
+/* Gereksizleri Gizle */
 #MainMenu {{visibility: hidden;}} footer {{visibility: hidden;}} header {{visibility: hidden;}}
-.stApp {{ background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); }}
-.stChatMessage {{ background-color: rgba(255, 255, 255, 0.1) !important; color: white !important; border-radius: 15px !important; }}
-.stMarkdown p {{ color: white !important; }}
+.stDeployButton {{display:none;}}
 
-/* ATAÇ BUTONU */
-div[data-testid="stFileUploader"] {{ position: fixed; bottom: 28px; left: calc(50% - 395px); z-index: 999999; width: 50px; }}
+/* Animasyonlu Arka Plan */
+.stApp {{
+    background: linear-gradient(315deg, #091236 3%, #1e215a 38%, #3a1c71 68%, #4e085e 98%);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+    overflow: hidden;
+}}
+
+@keyframes gradient {{
+    0% {{ background-position: 0% 50%; }}
+    50% {{ background-position: 100% 50%; }}
+    100% {{ background-position: 0% 50%; }}
+}}
+
+/* Dalga Efekti (Wave Overlay) */
+.stApp::before {{
+    content: "";
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: url('https://raw.githubusercontent.com/t7686/waves/main/wave.svg');
+    background-repeat: repeat-x;
+    background-position: bottom;
+    background-size: 2000px 300px;
+    opacity: 0.1;
+    animation: wave 20s linear infinite;
+    pointer-events: none;
+}}
+
+@keyframes wave {{
+    0% {{ background-position-x: 0; }}
+    100% {{ background-position-x: 2000px; }}
+}}
+
+/* Mesaj Balonları */
+.stChatMessage {{
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    border-radius: 20px !important;
+    backdrop-filter: blur(10px);
+}}
+.stMarkdown p {{ color: #e0e0e0 !important; font-family: 'Segoe UI', sans-serif; }}
+
+/* Chat Input Bölgesi (Dark Purple & Lacivert) */
+[data-testid="stChatInput"] {{
+    background-color: rgba(15, 12, 41, 0.9) !important;
+    border: 1px solid #6a11cb !important;
+    border-radius: 30px !important;
+    padding: 10px !important;
+}}
+[data-testid="stChatInput"] textarea {{
+    color: white !important;
+}}
+
+/* Başlık (Uyumlu Renkler) */
+.main-title {{
+    font-family: 'Trebuchet MS', sans-serif;
+    background: linear-gradient(to right, #a18cd1, #fbc2eb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 3rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 0px;
+}}
+
+/* Ataç Butonu */
+div[data-testid="stFileUploader"] {{ position: fixed; bottom: 32px; left: calc(50% - 390px); z-index: 999999; width: 50px; }}
 div[data-testid="stFileUploader"] section {{ padding: 0 !important; min-height: 0 !important; background: transparent !important; border: none !important; }}
 div[data-testid="stFileUploader"] label, div[data-testid="stFileUploader"] small, div[data-testid="stFileUploader"] p {{ display: none !important; }}
 div[data-testid="stFileUploader"] button {{
-    background-image: url("{PAPERCLIP_URL}") !important; background-repeat: no-repeat !important; background-position: center !important; background-size: 22px !important;
-    background-color: rgba(20, 20, 20, 0.9) !important; border: 1px solid rgba(255, 255, 255, 0.4) !important; border-radius: 50% !important;
+    background-image: url("{PAPERCLIP_URL}") !important; background-repeat: no-repeat !important; background-position: center !important; background-size: 20px !important;
+    background-color: #24243e !important; border: 1px solid #a18cd1 !important; border-radius: 50% !important;
     width: 44px !important; height: 44px !important; color: transparent !important;
 }}
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================
-# BAĞLANTI (ÖNEMLİ GÜNCELLEME)
+# LOGO VE BAŞLIK
 # ==============================
-# Buraya headers ekledik ki Ngrok'un o meşhur uyarı ekranına takılmayalım
+st.markdown(f'<div style="text-align:center; padding-top: 20px;"><img src="{LOGO_URL}" width="90"></div>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">SCRIBER AI</h1>', unsafe_allow_html=True)
+
+# ==============================
+# BAĞLANTI AYARI
+# ==============================
 client = OpenAI(
     base_url=f"{NGROK_URL}/v1", 
     api_key="lm-studio",
@@ -48,8 +119,6 @@ client = OpenAI(
 
 if "messages" not in st.session_state:
     st.session_state.messages = [{"role": "system", "content": "Senin adın Scriber. Yusuf Alp senin kurucun ve baban."}]
-
-st.markdown(f'<div style="text-align:center;"><img src="{LOGO_URL}" width="80"><h1>SCRIBER AI</h1></div>', unsafe_allow_html=True)
 
 # Geçmişi Göster
 for message in st.session_state.messages:
@@ -60,8 +129,7 @@ for message in st.session_state.messages:
 # Giriş ve Dosya İşlemi
 uploaded_file = st.file_uploader("", type=['txt', 'py'], key="file_input")
 
-if prompt := st.chat_input("Scriber ile konuş..."):
-    # Dosya varsa içeriğini prompt'a ekle (Görsel hatasını önlemek için)
+if prompt := st.chat_input("Scriber ile dertleş kanka..."):
     user_content = prompt
     if uploaded_file:
         try:
@@ -78,9 +146,7 @@ if prompt := st.chat_input("Scriber ile konuş..."):
         placeholder = st.empty()
         full_response = ""
         try:
-            # Sadece bu istek için içeriği genişletiyoruz
             current_messages = st.session_state.messages[:-1] + [{"role": "user", "content": user_content}]
-            
             response = client.chat.completions.create(
                 model="llama3-turkish", 
                 messages=current_messages,
@@ -96,4 +162,4 @@ if prompt := st.chat_input("Scriber ile konuş..."):
             if uploaded_file: st.rerun()
             
         except Exception as e:
-            st.error(f"Kanka bir sorun var: {e}")
+            st.error(f"Kanka bir sorun var, babana haber ver: {e}")
