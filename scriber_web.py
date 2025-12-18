@@ -8,7 +8,7 @@ import bcrypt
 # 🔑 AYARLAR
 # ==============================
 SUPABASE_URL = "https://rhenrzjfkiefhzfkkwgv.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoZW5yempma2llZmh6Zmtrd2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNzY3MTMsImV4cCI6MjA4MTY1MjcxM30.gwjvIT5M8PyP9SBysXImyNblPm6XNwJTeZAayUeVCxU"
+SUPABASE_KEY = "ANON_KEYİN"
 NGROK_URL = "https://hydropathical-duodecastyle-camron.ngrok-free.dev"
 LOGO_URL = "https://i.ibb.co/CD44FDc/Chat-GPT-mage-17-Ara-2025-23-59-13.png"
 
@@ -21,12 +21,12 @@ st.set_page_config(
 )
 
 # ==============================
-# 🎨 CSS — HER ŞEY BURADA
+# 🎨 GLOBAL CSS (HER ŞEY)
 # ==============================
 st.markdown("""
 <style>
 
-/* === ARKAPLAN === */
+/* === ANA ARKAPLAN === */
 .stApp {
     background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1e215a);
     background-size: 400% 400%;
@@ -38,24 +38,38 @@ st.markdown("""
     100% { background-position: 0% 50%; }
 }
 
-/* === ALT BEYAZ ŞERİDİ TAMAMEN YOK ET === */
+/* === ALT BEYAZ ŞERİT YOK === */
 div[data-testid="stBottomBlockContainer"] {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-}
-div[data-testid="stBottomBlockContainer"]::before,
-div[data-testid="stBottomBlockContainer"]::after {
-    display: none !important;
 }
 
-/* === CHAT INPUT TEMİZLE === */
-.stChatInput {
+/* === TEXT INPUT + PASSWORD === */
+div[data-testid="stTextInput"],
+div[data-testid="stPasswordInput"] {
+    background: transparent !important;
+}
+
+div[data-testid="stTextInput"] input,
+div[data-testid="stPasswordInput"] input {
+    background-color: rgba(255,255,255,0.05) !important;
+    border: 2px solid #6a11cb !important;
+    border-radius: 12px !important;
+    color: white !important;
+}
+
+/* placeholder */
+input::placeholder {
+    color: rgba(255,255,255,0.6) !important;
+}
+
+/* === CHAT INPUT === */
+div[data-testid="stChatInput"] {
     background: transparent !important;
     border: none !important;
 }
+
 textarea[data-testid="stChatInputTextArea"] {
     background-color: rgba(255,255,255,0.05) !important;
     border: 2px solid #6a11cb !important;
@@ -63,7 +77,7 @@ textarea[data-testid="stChatInputTextArea"] {
     color: white !important;
 }
 
-/* === TÜM BUTONLAR === */
+/* === BUTONLAR === */
 button {
     background-color: #393863 !important;
     color: white !important;
@@ -72,7 +86,6 @@ button {
     font-weight: 600 !important;
 }
 button:hover {
-    background-color: #393863 !important;
     opacity: 0.9;
 }
 
@@ -85,6 +98,10 @@ section[data-testid="stSidebar"] {
 /* === GENEL === */
 header, footer, #MainMenu { visibility: hidden; }
 h1,h2,h3,p,span,label { color: white !important; }
+input:focus, textarea:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
 
 </style>
 """, unsafe_allow_html=True)
@@ -96,10 +113,7 @@ def hash_password(pw: str) -> str:
     return bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
 
 def check_password(pw: str, hashed: str) -> bool:
-    try:
-        return bcrypt.checkpw(pw.encode(), hashed.encode())
-    except:
-        return False
+    return bcrypt.checkpw(pw.encode(), hashed.encode())
 
 # ==============================
 # 🔐 AUTH
@@ -119,7 +133,7 @@ if "user" not in st.session_state:
             if st.button("Giriş Yap", use_container_width=True):
                 res = supabase.table("scriber_users").select("*").eq("username", u).execute()
                 if res.data and check_password(p, res.data[0]["password"]):
-                    st.session_state.user = res.data[0]["username"]
+                    st.session_state.user = u
                     st.rerun()
                 else:
                     st.error("Hatalı giriş")
@@ -178,6 +192,7 @@ for msg in st.session_state.history:
 
 if prompt := st.chat_input("Scriber'a yaz..."):
     st.session_state.history.append({"role":"user","content":prompt})
+
     with st.chat_message("assistant", avatar=LOGO_URL):
         r = client.chat.completions.create(
             model="llama3-turkish",
@@ -185,4 +200,5 @@ if prompt := st.chat_input("Scriber'a yaz..."):
         )
         reply = r.choices[0].message.content
         st.markdown(reply)
+
     st.session_state.history.append({"role":"assistant","content":reply})
