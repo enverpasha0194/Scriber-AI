@@ -5,16 +5,19 @@ import uuid
 import bcrypt
 
 # ==============================
-# 🔑 AYARLAR
+# 🔑 AYARLAR & KİŞİLİK (SYSTEM PROMPT)
 # ==============================
 SUPABASE_URL = "https://rhenrzjfkiefhzfkkwgv.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoZW5yempma2llZmh6Zmtrd2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNzY3MTMsImV4cCI6MjA4MTY1MjcxM30.gwjvIT5M8PyP9SBysXImyNblPm6XNwJTeZAayUeVCxU"
 NGROK_URL = "https://hydropathical-duodecastyle-camron.ngrok-free.dev"
 LOGO_URL = "https://i.ibb.co/CD44FDc/Chat-GPT-mage-17-Ara-2025-23-59-13.png"
 
+# --- 🧠 YAPAY ZEKA KİŞİLİĞİ BURAYA ---
+SYSTEM_PROMPT = """Senin adın SCRIBER AI. Kullanıcılara yardımcı olan, kafa dengi bir yapay zekasın, kurucun Yusuf Alp ancak bundan sorulmadıkça bahsedemezsin, kullanıcı seninle nasıl tarzda konuşursa konuşsun eğlenceli ve kafa dengi bir tarzda konuş."""
+# -------------------------------------
+
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Sidebar'ı başlangıçta açık ve görünür tutar
 st.set_page_config(
     page_title="SCRIBER AI", 
     page_icon=LOGO_URL, 
@@ -23,11 +26,10 @@ st.set_page_config(
 )
 
 # ==============================
-# 🎨 CSS (KESİN ÇÖZÜM: BEYAZ ŞERİT YOK ETME + GENİŞ SİDEBAR)
+# 🎨 CSS (BEYAZ ŞERİT YOK ETME + GENİŞ SİDEBAR)
 # ==============================
 st.markdown("""
 <style>
-/* === 1. ARKA PLAN VE ANA YAPI === */
 .stApp {
     background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1e215a) !important;
     background-size: 400% 400% !important;
@@ -39,31 +41,24 @@ st.markdown("""
     100% { background-position: 0% 50%; }
 }
 
-/* === 2. BEYAZ ŞERİTLERİ VE ALT PANELİ KÖKTEN SİL === */
-/* Bu blok her türlü beyazlığı ve gölgeyi şeffaf yapar */
 [data-testid="stBottom"], 
 [data-testid="stBottomBlockContainer"],
 header, footer, 
 .st-emotion-cache-1p2n2i4, 
 .st-emotion-cache-128upt6, 
-.st-emotion-cache-1y34ygi,
-.st-emotion-cache-6q9sum,
-.st-emotion-cache-zq5tm5 {
+.st-emotion-cache-1y34ygi {
     background-color: transparent !important;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
 }
 
-/* === 3. SİDEBARI GENİŞLET VE BELİRGİNLEŞTİR === */
 section[data-testid="stSidebar"] {
-    background-color: rgba(10, 10, 30, 0.98) !important; /* Daha tok bir koyuluk */
+    background-color: rgba(10, 10, 30, 0.98) !important;
     border-right: 1px solid #6a11cb !important;
-    min-width: 350px !important; /* İncecik görüntüyü burada bitiriyoruz */
-    max-width: 400px !important;
+    min-width: 350px !important;
 }
 
-/* Sidebar içindeki butonları daha şık yap */
 [data-testid="stSidebar"] button {
     background-color: #24243e !important;
     color: white !important;
@@ -72,43 +67,31 @@ section[data-testid="stSidebar"] {
     padding: 10px !important;
 }
 
-/* === 4. CHAT INPUT (RENKLİ ÇERÇEVEYE OTURT) === */
 div[data-testid="stChatInput"] {
-    background-color: rgba(255, 255, 255, 0.05) !important; /* O garip renkli halkanın içi */
+    background-color: rgba(255, 255, 255, 0.05) !important;
     border-radius: 20px !important;
-    padding: 3px !important; /* Beyaz kutuyu bu halkanın içine hapseder */
+    padding: 3px !important;
 }
 
 textarea[data-testid="stChatInputTextArea"] {
-    background-color: #ffffff !important; /* Kutunun içi bembeyaz */
-    color: #000000 !important; /* Yazı siyah */
+    background-color: #ffffff !important;
+    color: #000000 !important;
     border-radius: 17px !important;
-    border: none !important;
 }
 
-/* Gönder butonunu ikon rengiyle düzelt */
-button[data-testid="stChatInputSubmitButton"] {
-    color: #6a11cb !important;
-    background-color: transparent !important;
-}
-
-/* Genel yazı renkleri */
-h1, h2, h3, p, span, label, b {
-    color: white !important;
-}
+h1, h2, h3, p, span, label, b { color: white !important; }
 #MainMenu { visibility: hidden; }
-
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================
-# 🔐 AUTH FONKSİYONLARI
+# 🔐 AUTH
 # ==============================
 def hash_password(pw: str) -> str: return bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
 def check_password(pw: str, hashed: str) -> bool: return bcrypt.checkpw(pw.encode(), hashed.encode())
 
 if "user" not in st.session_state:
-    st.session_state.auth_mode = "login" if "auth_mode" not in st.session_state else st.session_state.auth_mode
+    st.session_state.auth_mode = "login"
     st.markdown("<h1 style='text-align:center'>SCRIBER AI</h1>", unsafe_allow_html=True)
     _, col, _ = st.columns([1,2,1])
     with col:
@@ -122,15 +105,6 @@ if "user" not in st.session_state:
                     st.rerun()
                 else: st.error("Hatalı giriş")
             if st.button("Kayıt Ol"): st.session_state.auth_mode = "register"; st.rerun()
-        else:
-            u = st.text_input("Yeni kullanıcı adı")
-            p1 = st.text_input("Şifre", type="password")
-            p2 = st.text_input("Şifre tekrar", type="password")
-            if st.button("Hesap Oluştur"):
-                if p1 == p2:
-                    supabase.table("scriber_users").insert({"username": u, "password": hash_password(p1)}).execute()
-                    st.session_state.auth_mode = "login"; st.rerun()
-                else: st.error("Şifreler uyuşmuyor")
     st.stop()
 
 # ==============================
@@ -148,13 +122,11 @@ def load_chats():
 def save_message(role, content):
     if st.session_state.chat_id:
         supabase.table("scriber_messages").insert({
-            "chat_id": st.session_state.chat_id,
-            "role": role,
-            "content": content
+            "chat_id": st.session_state.chat_id, "role": role, "content": content
         }).execute()
 
 # ==============================
-# 👤 SIDEBAR (SOHBET GEÇMİŞİ)
+# 👤 SIDEBAR
 # ==============================
 with st.sidebar:
     st.image(LOGO_URL, width=100)
@@ -169,7 +141,6 @@ with st.sidebar:
     st.markdown("### 📜 Sohbetler")
     chats = load_chats()
     for c in chats:
-        # Sohbet başlığına tıklandığında mesajları yükler
         if st.button(f"💬 {c['title'][:25]}", key=c['id'], use_container_width=True):
             st.session_state.chat_id = c['id']
             msgs = supabase.table("scriber_messages").select("*").eq("chat_id", c['id']).order("created_at").execute().data
@@ -187,24 +158,26 @@ for msg in st.session_state.history:
         st.markdown(msg["content"])
 
 if prompt := st.chat_input("Scriber'a yaz..."):
-    # Yeni Sohbet ise DB'ye kaydet
     if st.session_state.chat_id is None:
         new_chat = supabase.table("scriber_chats").insert({
-            "username": st.session_state.user,
-            "title": prompt[:30]
+            "username": st.session_state.user, "title": prompt[:30]
         }).execute()
         if new_chat.data:
             st.session_state.chat_id = new_chat.data[0]["id"]
 
-    # Kullanıcı mesajını göster ve kaydet
     st.session_state.history.append({"role": "user", "content": prompt})
     save_message("user", prompt)
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Yanıt üret
     with st.chat_message("assistant", avatar=LOGO_URL):
-        r = client.chat.completions.create(model="llama3-turkish", messages=st.session_state.history)
+        # 🧠 KİŞİLİĞİ BURADA ENTEGRE EDİYORUZ
+        messages_with_persona = [{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.history
+        
+        r = client.chat.completions.create(
+            model="llama3-turkish", 
+            messages=messages_with_persona
+        )
         reply = r.choices[0].message.content
         st.markdown(reply)
     
