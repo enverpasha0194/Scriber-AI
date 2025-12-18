@@ -21,16 +21,16 @@ st.set_page_config(
 )
 
 # ==============================
-# 🎨 DERHAL DÜZELTİLMİŞ CSS (WAVY + TAM OTURTMA)
+# 🎨 CSS (SADECE BUTON RENGİ GERİ ALINDI)
 # ==============================
 st.markdown("""
 <style>
 
-/* === 1. WAVY HAREKETLİ ARKAPLAN === */
+/* === WAVY ARKAPLAN === */
 .stApp {
-    background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1e215a) !important;
-    background-size: 400% 400% !important;
-    animation: gradient 15s ease infinite !important;
+    background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1e215a);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
 }
 @keyframes gradient {
     0% { background-position: 0% 50%; }
@@ -38,66 +38,57 @@ st.markdown("""
     100% { background-position: 0% 50%; }
 }
 
-/* === 2. BEYAZ ALANI SİL VE KUTUYU ÇERÇEVEYE OTURT === */
-/* Alt paneli ve beyaz şeritleri tamamen şeffaf yap */
-[data-testid="stBottom"], 
+/* === BEYAZ ŞERİTLERİ SİL === */
+[data-testid="stBottom"],
 [data-testid="stBottomBlockContainer"],
-.st-emotion-cache-1p2n2i4, 
-.st-emotion-cache-128upt6, 
+.st-emotion-cache-1p2n2i4,
+.st-emotion-cache-128upt6,
 .st-emotion-cache-1y34ygi {
-    background-color: transparent !important;
     background: transparent !important;
     border: none !important;
-    box-shadow: none !important;
 }
 
-/* Chat Input'un etrafındaki o renkli (glow) halkayı tam oturt */
+/* === CHAT INPUT === */
 div[data-testid="stChatInput"] {
-    background-color: rgba(255, 255, 255, 0.05) !important; /* Renkli halkanın içi çok hafif şeffaf */
+    background-color: rgba(255,255,255,0.05) !important;
     border-radius: 20px !important;
-    padding: 3px !important; /* Beyaz kutuyu bu halkanın içine tam oturtur */
-    border: none !important;
+    padding: 3px !important;
 }
-
-/* BEYAZ KUTUNUN KENDİSİ */
 textarea[data-testid="stChatInputTextArea"] {
-    background-color: #ffffff !important; /* Kutunun içi beyaz */
-    color: #000000 !important; /* Yazı siyah (okunabilirlik için) */
-    border: none !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
     border-radius: 17px !important;
-    box-shadow: none !important;
+    border: none !important;
 }
 
-/* Gönder butonunu ikon rengiyle kutuya uyarla */
-button[data-testid="stChatInputSubmitButton"] {
-    background-color: transparent !important;
-    color: #6a11cb !important;
-    right: 5px !important;
-}
-
-/* === 3. MESAJ BALONLARI VE YAZILAR === */
-[data-testid="stChatMessage"] {
-    background-color: rgba(255, 255, 255, 0.05) !important;
-    border-radius: 15px !important;
-}
-
-h1, h2, h3, p, span, label, div {
+/* === 🔥 BUTON RENGİ (GERİ ALINDI) === */
+button,
+div[data-testid="stButton"] > button {
+    background-color: #393863 !important;
     color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+}
+button:hover {
+    background-color: #393863 !important;
+    opacity: 0.9 !important;
 }
 
-/* === 4. SIDEBAR VE GENEL TEMİZLİK === */
+/* === SIDEBAR === */
 section[data-testid="stSidebar"] {
-    background-color: rgba(5, 5, 20, 0.9) !important;
+    background-color: rgba(5,5,20,0.9) !important;
     border-right: 1px solid #6a11cb !important;
 }
 
-header, footer, #MainMenu { visibility: hidden !important; }
+header, footer, #MainMenu { visibility: hidden; }
+h1,h2,h3,p,span,label,div { color: white !important; }
 
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================
-# 🔐 AUTH VE MANTIK
+# 🔐 AUTH
 # ==============================
 def hash_password(pw: str) -> str:
     return bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
@@ -120,31 +111,41 @@ if "user" not in st.session_state:
                 if res.data and check_password(p, res.data[0]["password"]):
                     st.session_state.user = u
                     st.rerun()
-                else: st.error("Hatalı giriş")
+                else:
+                    st.error("Hatalı giriş")
             if st.button("Kayıt Ol"):
-                st.session_state.auth_mode = "register"; st.rerun()
+                st.session_state.auth_mode = "register"
+                st.rerun()
         else:
             u = st.text_input("Yeni kullanıcı adı")
             p1 = st.text_input("Şifre", type="password")
             p2 = st.text_input("Şifre tekrar", type="password")
             if st.button("Hesap Oluştur"):
                 if p1 == p2:
-                    supabase.table("scriber_users").insert({"username": u, "password": hash_password(p1)}).execute()
-                    st.session_state.auth_mode = "login"; st.rerun()
-                else: st.error("Şifreler uyuşmuyor")
+                    supabase.table("scriber_users").insert({
+                        "username": u,
+                        "password": hash_password(p1)
+                    }).execute()
+                    st.session_state.auth_mode = "login"
+                    st.rerun()
+                else:
+                    st.error("Şifreler uyuşmuyor")
     st.stop()
 
 # ==============================
 # 🧠 CHAT
 # ==============================
-if "chat_id" not in st.session_state: st.session_state.chat_id = str(uuid.uuid4())
-if "history" not in st.session_state: st.session_state.history = []
+if "chat_id" not in st.session_state:
+    st.session_state.chat_id = str(uuid.uuid4())
+if "history" not in st.session_state:
+    st.session_state.history = []
 
 with st.sidebar:
     st.image(LOGO_URL, width=100)
     st.write(f"👤 {st.session_state.user}")
     if st.button("➕ Yeni Sohbet", use_container_width=True):
-        st.session_state.history = []; st.rerun()
+        st.session_state.history = []
+        st.rerun()
 
 st.markdown("<h1 style='text-align:center'>SCRIBER AI</h1>", unsafe_allow_html=True)
 client = OpenAI(base_url=f"{NGROK_URL}/v1", api_key="lm-studio")
@@ -155,10 +156,11 @@ for msg in st.session_state.history:
 
 if prompt := st.chat_input("Scriber'a yaz..."):
     st.session_state.history.append({"role":"user","content":prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
     with st.chat_message("assistant", avatar=LOGO_URL):
-        r = client.chat.completions.create(model="llama3-turkish", messages=st.session_state.history)
+        r = client.chat.completions.create(
+            model="llama3-turkish",
+            messages=st.session_state.history
+        )
         reply = r.choices[0].message.content
         st.markdown(reply)
     st.session_state.history.append({"role":"assistant","content":reply})
