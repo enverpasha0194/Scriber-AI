@@ -2,12 +2,13 @@ import streamlit as st
 from openai import OpenAI
 from supabase import create_client, Client
 import uuid
+import bcrypt
 
 # ==============================
 # 🔑 AYARLAR
 # ==============================
 SUPABASE_URL = "https://rhenrzjfkiefhzfkkwgv.supabase.co"
-SUPABASE_KEY = "YOUR_SUPABASE_KEY"
+SUPABASE_KEY = "SUPABASE_SERVICE_OR_ANON_KEYİNİ_BURAYA_YAZ"
 NGROK_URL = "https://hydropathical-duodecastyle-camron.ngrok-free.dev"
 LOGO_URL = "https://i.ibb.co/CD44FDc/Chat-GPT-mage-17-Ara-2025-23-59-13.png"
 
@@ -42,28 +43,49 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================
-# 🔐 GİRİŞ / KAYIT
+# 🔐 ŞİFRE FONKSİYONLARI
+# ==============================
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+def check_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode(), hashed.encode())
+
+# ==============================
+# 🔐 GİRİŞ / KAYIT (ŞİFRELİ)
 # ==============================
 if "user_id" not in st.session_state:
     st.markdown("<h1 style='color:white;text-align:center'>SCRIBER AI</h1>", unsafe_allow_html=True)
+
     username = st.text_input("Kullanıcı adı")
+    password = st.text_input("Şifre", type="password")
 
     if st.button("Giriş / Kayıt"):
-        if not username:
-            st.warning("İsim gir kanka 😄")
+        if not username or not password:
+            st.warning("Kullanıcı adı ve şifre zorunlu")
             st.stop()
 
         res = supabase.table("users").select("*").eq("username", username).execute()
 
         if res.data:
-            st.session_state.user_id = res.data[0]["id"]
-        else:
-            new_user = supabase.table("users").insert({
-                "username": username
-            }).execute()
-            st.session_state.user_id = new_user.data[0]["id"]
+            user = res.data[0]
+            if not check_password(password, user["password_hash"]):
+                st.error("Şifre yanlış")
+                st.stop()
 
-        st.session_state.user = username
+            st.session_state.user_id = user["id"]
+            st.session_state.user = username
+
+        else:
+            hashed = hash_password(password)
+            new_user = supabase.table("users").insert({
+                "username": username,
+                "password_hash": hashed
+            }).execute()
+
+            st.session_state.user_id = new_user.data[0]["id"]
+            st.session_state.user = username
+
         st.rerun()
 
     st.stop()
@@ -134,7 +156,7 @@ for msg in st.session_state.chat_history:
         st.markdown(msg["content"])
 
 # ==============================
-# 📝 MESAJ GÖNDERME
+# 📝 MESAJ & BAŞLIK
 # ==============================
 def generate_title(text):
     r = client.chat.completions.create(
@@ -177,7 +199,6 @@ if prompt := st.chat_input("Scriber'a mesaj gönder..."):
             {"role": "assistant", "content": full_response}
         )
 
-    # 🔹 DB KAYIT
     supabase.table("messages").insert([
         {
             "chat_id": st.session_state.current_chat_id,
@@ -191,7 +212,6 @@ if prompt := st.chat_input("Scriber'a mesaj gönder..."):
         }
     ]).execute()
 
-    # 🔹 BAŞLIK (ilk mesajda)
     if len(st.session_state.chat_history) == 2:
         title = generate_title(prompt)
         supabase.table("chats") \
