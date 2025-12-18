@@ -8,7 +8,7 @@ import bcrypt
 # 🔑 AYARLAR
 # ==============================
 SUPABASE_URL = "https://rhenrzjfkiefhzfkkwgv.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoZW5yempma2llZmh6Zmtrd2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNzY3MTMsImV4cCI6MjA4MTY1MjcxM30.gwjvIT5M8PyP9SBysXImyNblPm6XNwJTeZAayUeVCxU"
+SUPABASE_KEY = "ANON_KEYİN"
 NGROK_URL = "https://hydropathical-duodecastyle-camron.ngrok-free.dev"
 LOGO_URL = "https://i.ibb.co/CD44FDc/Chat-GPT-mage-17-Ara-2025-23-59-13.png"
 
@@ -21,12 +21,10 @@ st.set_page_config(
 )
 
 # ==============================
-# 🎨 CSS (SADECE BUTON RENGİ GERİ ALINDI)
+# 🎨 CSS
 # ==============================
 st.markdown("""
 <style>
-
-/* === WAVY ARKAPLAN === */
 .stApp {
     background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1e215a);
     background-size: 400% 400%;
@@ -38,52 +36,20 @@ st.markdown("""
     100% { background-position: 0% 50%; }
 }
 
-/* === BEYAZ ŞERİTLERİ SİL === */
-[data-testid="stBottom"],
-[data-testid="stBottomBlockContainer"],
-.st-emotion-cache-1p2n2i4,
-.st-emotion-cache-128upt6,
-.st-emotion-cache-1y34ygi {
-    background: transparent !important;
-    border: none !important;
-}
-
-/* === CHAT INPUT === */
-div[data-testid="stChatInput"] {
-    background-color: rgba(255,255,255,0.05) !important;
-    border-radius: 20px !important;
-    padding: 3px !important;
-}
-textarea[data-testid="stChatInputTextArea"] {
-    background-color: #ffffff !important;
-    color: #000000 !important;
-    border-radius: 17px !important;
-    border: none !important;
-}
-
-/* === 🔥 BUTON RENGİ (GERİ ALINDI) === */
 button,
 div[data-testid="stButton"] > button {
     background-color: #393863 !important;
     color: white !important;
-    border: none !important;
     border-radius: 8px !important;
     font-weight: 600 !important;
 }
-button:hover {
-    background-color: #393863 !important;
-    opacity: 0.9 !important;
-}
 
-/* === SIDEBAR === */
 section[data-testid="stSidebar"] {
     background-color: rgba(5,5,20,0.9) !important;
-    border-right: 1px solid #6a11cb !important;
 }
 
-header, footer, #MainMenu { visibility: hidden; }
 h1,h2,h3,p,span,label,div { color: white !important; }
-
+header, footer, #MainMenu { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -133,34 +99,64 @@ if "user" not in st.session_state:
     st.stop()
 
 # ==============================
-# 🧠 CHAT
+# 🧠 MULTI CHAT STATE
 # ==============================
-if "chat_id" not in st.session_state:
-    st.session_state.chat_id = str(uuid.uuid4())
-if "history" not in st.session_state:
-    st.session_state.history = []
+if "chats" not in st.session_state:
+    st.session_state.chats = {}
 
+if "active_chat" not in st.session_state:
+    cid = str(uuid.uuid4())
+    st.session_state.active_chat = cid
+    st.session_state.chats[cid] = []
+
+# ==============================
+# 📚 SIDEBAR – SOHBETLER
+# ==============================
 with st.sidebar:
-    st.image(LOGO_URL, width=100)
+    st.image(LOGO_URL, width=90)
     st.write(f"👤 {st.session_state.user}")
+    st.divider()
+
     if st.button("➕ Yeni Sohbet", use_container_width=True):
-        st.session_state.history = []
+        cid = str(uuid.uuid4())
+        st.session_state.chats[cid] = []
+        st.session_state.active_chat = cid
         st.rerun()
 
-st.markdown("<h1 style='text-align:center'>SCRIBER AI</h1>", unsafe_allow_html=True)
-client = OpenAI(base_url=f"{NGROK_URL}/v1", api_key="lm-studio")
+    st.divider()
+    st.markdown("### 💬 Sohbetler")
 
-for msg in st.session_state.history:
+    for cid, history in st.session_state.chats.items():
+        title = history[0]["content"][:20] if history else "Yeni Sohbet"
+        if st.button(title, key=cid, use_container_width=True):
+            st.session_state.active_chat = cid
+            st.rerun()
+
+# ==============================
+# 💬 CHAT EKRANI
+# ==============================
+st.markdown("<h1 style='text-align:center'>SCRIBER AI</h1>", unsafe_allow_html=True)
+
+client = OpenAI(
+    base_url=f"{NGROK_URL}/v1",
+    api_key="lm-studio"
+)
+
+history = st.session_state.chats[st.session_state.active_chat]
+
+for msg in history:
     with st.chat_message(msg["role"], avatar=LOGO_URL if msg["role"]=="assistant" else None):
         st.markdown(msg["content"])
 
 if prompt := st.chat_input("Scriber'a yaz..."):
-    st.session_state.history.append({"role":"user","content":prompt})
+    history.append({"role": "user", "content": prompt})
+
     with st.chat_message("assistant", avatar=LOGO_URL):
         r = client.chat.completions.create(
             model="llama3-turkish",
-            messages=st.session_state.history
+            messages=history
         )
         reply = r.choices[0].message.content
         st.markdown(reply)
-    st.session_state.history.append({"role":"assistant","content":reply})
+
+    history.append({"role": "assistant", "content": reply})
