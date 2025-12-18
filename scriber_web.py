@@ -17,8 +17,62 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 st.set_page_config(
     page_title="SCRIBER AI",
     page_icon=LOGO_URL,
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
+
+# ==============================
+# ✨ WAVE ANIMASYONU VE GÖRSEL DÜZENLEME (YENİ)
+# ==============================
+st.markdown(f"""
+<style>
+    /* 1. DALGALI ARKA PLAN ANIMASYONU */
+    .stApp, [data-testid="stAppViewContainer"] {{
+        background: linear-gradient(-45deg, #091236, #1e215a, #3a1c71, #0f0c29);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        color: white !important;
+    }}
+    
+    @keyframes gradient {{
+        0% {{ background-position: 0% 50%; }}
+        50% {{ background-position: 100% 50%; }}
+        100% {{ background-position: 0% 50%; }}
+    }}
+
+    /* 2. BEYAZ ŞERİT VE ALT KATMAN TEMİZLİĞİ */
+    div[data-testid="stBottomBlockContainer"],
+    .st-emotion-cache-1y34ygi,
+    .e4man117,
+    .st-emotion-cache-tn0cau,
+    .ek2vi383,
+    .st-emotion-cache-1vo6xi6,
+    .ek2vi381 {{
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        border: none !important;
+        box-shadow: none !important;
+    }}
+
+    /* 3. SIDEBAR STİLİ */
+    section[data-testid="stSidebar"] {{
+        background-color: rgba(5, 5, 20, 0.95) !important;
+        border-right: 2px solid #6a11cb !important;
+    }}
+
+    /* 4. GENEL YAZI RENKLERİ */
+    #MainMenu, footer, header {{visibility: hidden;}}
+    p, span, label, h1 {{ color: #ffffff !important; }}
+    
+    /* Input Alanı Düzenlemesi */
+    div[data-testid="stChatInput"] {{
+        background-color: rgba(15, 12, 41, 0.9) !important;
+        border: 10px solid #6a11cb !important; /* Belirginleştirilmiş mor kenarlık */
+        border-radius: 25px !important;
+    }}
+</style>
+""", unsafe_allow_html=True)
 
 # ==============================
 # 🔐 ŞİFRE
@@ -39,7 +93,6 @@ if "auth_mode" not in st.session_state:
     st.session_state.auth_mode = "login"
 
 if "user" not in st.session_state:
-
     st.markdown("<h1 style='color:white;text-align:center'>SCRIBER AI</h1>", unsafe_allow_html=True)
 
     # ---------- LOGIN ----------
@@ -47,7 +100,7 @@ if "user" not in st.session_state:
         username = st.text_input("Kullanıcı adı")
         password = st.text_input("Şifre", type="password")
 
-        if st.button("Giriş Yap"):
+        if st.button("Giriş Yap", use_container_width=True):
             res = supabase.table("scriber_users").select("*").eq("username", username).execute()
 
             if not res.data:
@@ -64,7 +117,7 @@ if "user" not in st.session_state:
             st.session_state.user_id = user["id"]
             st.rerun()
 
-        if st.button("Kayıt Ol"):
+        if st.button("Hesabın yok mu? Kayıt Ol", use_container_width=True):
             st.session_state.auth_mode = "register"
             st.rerun()
 
@@ -74,7 +127,7 @@ if "user" not in st.session_state:
         password = st.text_input("Şifre", type="password")
         password2 = st.text_input("Şifre (tekrar)", type="password")
 
-        if st.button("Hesap Oluştur"):
+        if st.button("Hesap Oluştur", use_container_width=True):
             if password != password2:
                 st.error("Şifreler uyuşmuyor")
                 st.stop()
@@ -90,6 +143,10 @@ if "user" not in st.session_state:
             }).execute()
 
             st.success("Kayıt tamam, giriş yap")
+            st.session_state.auth_mode = "login"
+            st.rerun()
+            
+        if st.button("Zaten hesabın var mı? Giriş Yap", use_container_width=True):
             st.session_state.auth_mode = "login"
             st.rerun()
 
@@ -111,7 +168,7 @@ with st.sidebar:
     st.image(LOGO_URL, width=80)
     st.write(f"👤 **{st.session_state.user}**")
 
-    if st.button("➕ Yeni Sohbet"):
+    if st.button("➕ Yeni Sohbet", use_container_width=True):
         st.session_state.chat_id = str(uuid.uuid4())
         st.session_state.history = []
         st.rerun()
@@ -127,7 +184,7 @@ with st.sidebar:
     for c in chats.data:
         if c["chat_id"] not in seen and c["chat_title"]:
             seen.add(c["chat_id"])
-            if st.button(c["chat_title"], key=c["chat_id"]):
+            if st.button(c["chat_title"], key=c["chat_id"], use_container_width=True):
                 msgs = supabase.table("messages") \
                     .select("role,content") \
                     .eq("chat_id", c["chat_id"]) \
