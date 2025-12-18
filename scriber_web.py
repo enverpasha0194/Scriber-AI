@@ -78,7 +78,7 @@ if "user_id" not in st.session_state:
         password = st.text_input("Şifre", type="password")
 
         if st.button("Giriş Yap"):
-            res = supabase.table("users").select("*").eq("username", username).execute()
+            res = supabase.table("scriber_users").select("*").eq("username", username).execute()
             if not res.data:
                 st.error("Kullanıcı yok")
                 st.stop()
@@ -200,3 +200,4 @@ if prompt := st.chat_input("Scriber'a yaz..."):
         {"username":st.session_state.user,"role":"user","content":prompt,"chat_id":st.session_state.chat_id,"chat_title":title},
         {"username":st.session_state.user,"role":"assistant","content":full,"chat_id":st.session_state.chat_id,"chat_title":title}
     ]).execute()
+
