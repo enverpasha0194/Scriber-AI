@@ -15,15 +15,14 @@ PAPERCLIP_URL = "https://emojigraph.org/media/joypixels/paperclip_1f4ce.png"
 st.set_page_config(page_title="SCRIBER AI", page_icon=LOGO_URL, layout="centered")
 
 # ==============================
-# CSS: BEYAZ ŞERİDİ VE GEREKSİZLERİ SİLEN KOD
+# CSS: GÖRSEL DÜZENLEMELER
 # ==============================
 st.markdown(f"""
 <style>
-/* 1. TÜM GEREKSİZLERİ GİZLE */
+/* 1. GENEL AYARLAR */
 #MainMenu, footer, header {{visibility: hidden;}}
 .stDeployButton {{display:none;}}
 
-/* 2. ARKA PLAN ANIMASYONU */
 .stApp {{
     background: linear-gradient(315deg, #091236 0%, #1e215a 35%, #3a1c71 70%, #0f0c29 100%);
     background-size: 400% 400%;
@@ -36,84 +35,80 @@ st.markdown(f"""
     100% {{ background-position: 0% 50%; }}
 }}
 
-/* 3. ALTAKİ BEYAZ ŞERİDİ HEDEF ALAN ÖZEL KOD (Gönderdiğin HTML Sınıfları) */
+/* 2. ALTAKİ BEYAZ ŞERİDİ VE GEREKSİZLERİ SİL */
 div[data-testid="stBottomBlockContainer"] {{
     background-color: transparent !important;
-    background-image: none !important;
     border: none !important;
 }}
-
-/* Alt panelin tamamını şeffaf yap */
 div.st-emotion-cache-128upt6, div.st-emotion-cache-6shykm {{
     background-color: transparent !important;
-    border: none !important;
     box-shadow: none !important;
 }}
 
-/* 4. YAZMA BÖLMESİ (Chat Input) */
-div[data-testid="stChatInput"] {{
-    background-color: rgba(15, 12, 41, 0.9) !important;
-    border: 2px solid #6a11cb !important;
-    border-radius: 25px !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-    margin-bottom: 10px;
+/* 3. MESAJ STİLLERİ: SCRIBER (SOL) & KULLANICI (SAĞ) */
+/* Scriber'ın Yazısı Görünmüyordu - Parlak Beyaz/Gümüş Yaptık */
+[data-testid="stChatMessageContent"] p {{
+    color: #f0f0f0 !important;
+    font-size: 1.1rem !important;
+    font-weight: 500 !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }}
 
-/* 5. YAZDIĞIN YAZI RENGİ (Beyaz Değil) */
-div[data-testid="stChatInputTextArea"] textarea {{
-    color: #d1a3ff !important;
-    -webkit-text-fill-color: #d1a3ff !important;
-}}
-
-/* 6. ATAÇ ÜSTÜNDEKİ YAZILARI VE ALANI TEMİZLE */
-div[data-testid="stFileUploader"] section {{
-    display: flex !important;
-    padding: 0 !important;
-    min-height: 0 !important;
-    background: transparent !important;
+/* Kullanıcı Mesajlarını Sağa Yasla ve İkonu Gizle */
+div[data-testid="stChatMessage"]:has(span:contains("user")) {{
+    flex-direction: row-reverse !important;
+    background-color: transparent !important; /* Saydam beyaz kutuyu kaldırdık */
     border: none !important;
 }}
 
-/* Drag and Drop yazılarını tamamen yok et */
-div[data-testid="stFileUploader"] label, 
-div[data-testid="stFileUploader"] small, 
-div[data-testid="stFileUploader"] p,
-div[data-testid="stFileUploader"] span,
-div[data-testid="stFileUploader"] div {{
-    display: none !important;
+div[data-testid="stChatMessage"]:has(span:contains("user")) [data-testid="stChatMessageAvatar"] {{
+    display: none !important; /* Kullanıcı ikonunu sildik */
 }}
 
-/* 7. ATAÇ BUTONU KONUMU VE STİLİ */
+div[data-testid="stChatMessage"]:has(span:contains("user")) [data-testid="stChatMessageContent"] {{
+    text-align: right !important;
+    background-color: rgba(106, 17, 203, 0.4) !important; /* Kullanıcıya özel mor saydam kutu */
+    border-radius: 20px 0px 20px 20px !important;
+    padding: 10px 15px !important;
+    margin-left: auto !important;
+    max-width: 80% !important;
+}}
+
+/* Assistant (Scriber) Kutusu */
+div[data-testid="stChatMessage"]:has(span:contains("assistant")) {{
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 0px 20px 20px 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}}
+
+/* 4. CHAT INPUT VE ATAÇ DÜZENİ */
+div[data-testid="stChatInput"] {{
+    background-color: rgba(15, 12, 41, 0.95) !important;
+    border: 2px solid #6a11cb !important;
+    border-radius: 25px !important;
+}}
+
 div[data-testid="stFileUploader"] {{
-    position: fixed;
-    bottom: 35px;
-    left: calc(50% - 380px);
-    z-index: 999999;
-    width: 45px;
-    display: block !important;
+    position: fixed; bottom: 35px; left: calc(50% - 385px); z-index: 999999; width: 45px;
+}}
+div[data-testid="stFileUploader"] section, div[data-testid="stFileUploader"] label, div[data-testid="stFileUploader"] p {{
+    display: none !important;
 }}
 div[data-testid="stFileUploader"] button {{
-    display: flex !important;
     background-image: url("{PAPERCLIP_URL}") !important;
     background-repeat: no-repeat !important;
     background-position: center !important;
     background-size: 20px !important;
     background-color: #1e215a !important;
-    border: 1px solid #6a11cb !important;
     border-radius: 50% !important;
-    width: 42px !important;
-    height: 42px !important;
-    color: transparent !important;
+    width: 42px !important; height: 42px !important; color: transparent !important;
 }}
 
-/* 8. SCRIBER AI BAŞLIĞI */
 .main-title {{
     background: linear-gradient(to right, #6a11cb, #2575fc);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    font-size: 3.5rem;
-    font-weight: 800;
-    text-align: center;
+    font-size: 3rem; font-weight: 800; text-align: center;
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -121,7 +116,7 @@ div[data-testid="stFileUploader"] button {{
 # ==============================
 # ARAYÜZ
 # ==============================
-st.markdown(f'<div style="text-align:center;"><img src="{LOGO_URL}" width="90"></div>', unsafe_allow_html=True)
+st.markdown(f'<div style="text-align:center;"><img src="{LOGO_URL}" width="80"></div>', unsafe_allow_html=True)
 st.markdown('<h1 class="main-title">SCRIBER AI</h1>', unsafe_allow_html=True)
 
 # ==============================
@@ -136,17 +131,19 @@ client = OpenAI(
 if "messages" not in st.session_state:
     st.session_state.messages = [{"role": "system", "content": "Senin adın Scriber. Yusuf Alp senin baban."}]
 
+# Mesajları Yazdır
 for message in st.session_state.messages:
     if message["role"] != "system":
-        with st.chat_message(message["role"], avatar=LOGO_URL if message["role"]=="assistant" else "👤"):
+        avatar = LOGO_URL if message["role"] == "assistant" else None
+        with st.chat_message(message["role"], avatar=avatar):
             st.markdown(message["content"])
 
-# Ataç ve Giriş
+# Giriş
 uploaded_file = st.file_uploader("", type=['txt', 'py'], key="file_input")
 
-if prompt := st.chat_input("Scriber'e bir şeyler yaz..."):
+if prompt := st.chat_input("Scriber'e yaz..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user", avatar="👤"):
+    with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant", avatar=LOGO_URL):
