@@ -8,7 +8,7 @@ import bcrypt
 # 🔑 AYARLAR
 # ==============================
 SUPABASE_URL = "https://rhenrzjfkiefhzfkkwgv.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoZW5yempma2llZmh6Zmtrd2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNzY3MTMsImV4cCI6MjA4MTY1MjcxM30.gwjvIT5M8PyP9SBysXImyNblPm6XNwJTeZAayUeVCxU"
+SUPABASE_KEY = "SUPABASE_SERVICE_KEY"
 NGROK_URL = "https://hydropathical-duodecastyle-camron.ngrok-free.dev"
 LOGO_URL = "https://i.ibb.co/CD44FDc/Chat-GPT-mage-17-Ara-2025-23-59-13.png"
 
@@ -17,11 +17,12 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 st.set_page_config(
     page_title="SCRIBER AI",
     page_icon=LOGO_URL,
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 # ==============================
-# 🎨 ARKAPLAN + WAVE (GERİ GELDİ)
+# 🎨 CSS (ARKAPLAN + SIDEBAR)
 # ==============================
 st.markdown("""
 <style>
@@ -29,90 +30,57 @@ st.markdown("""
 .stDeployButton {display:none;}
 
 .stApp {
-    background: linear-gradient(
-        315deg,
-        #091236 0%,
-        #1e215a 35%,
-        #3a1c71 70%,
-        #0f0c29 100%
-    );
-    overflow-x: hidden;
+    background: linear-gradient(315deg,#091236,#1e215a,#3a1c71,#0f0c29);
 }
 
-.wave {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 200%;
-    height: 180px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 100% 100% 0 0;
-    animation: waveMove 18s linear infinite;
-    z-index: 0;
-}
-.wave.wave2 {
-    bottom: 30px;
-    opacity: 0.5;
-    animation-duration: 25s;
-}
-.wave.wave3 {
-    bottom: 60px;
-    opacity: 0.3;
-    animation-duration: 35s;
+section[data-testid="stSidebar"] {
+    background-color: rgba(10,10,35,0.98);
+    border-right: 2px solid #6a11cb;
+    width: 300px !important;
 }
 
-@keyframes waveMove {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
-}
-
-section.main > div {
-    position: relative;
-    z-index: 2;
-}
-
-h1, h2, h3, label, p {
+[data-testid="stChatMessageContent"] p {
     color: white !important;
+    font-size: 1.15rem;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.9);
+}
+
+div[data-testid="stChatMessage"]:has(span:contains("user")) {
+    flex-direction: row-reverse !important;
+}
+div[data-testid="stChatMessage"]:has(span:contains("user")) 
+[data-testid="stChatMessageAvatar"] {
+    display:none !important;
 }
 </style>
-
-<div class="wave"></div>
-<div class="wave wave2"></div>
-<div class="wave wave3"></div>
 """, unsafe_allow_html=True)
 
 # ==============================
-# 🔐 ŞİFRE FONKSİYONLARI
+# 🔐 ŞİFRE
 # ==============================
-def hash_password(pw: str) -> str:
+def hash_password(pw):
     return bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
 
-def check_password(pw: str, hashed: str) -> bool:
+def check_password(pw, hashed):
     return bcrypt.checkpw(pw.encode(), hashed.encode())
 
 # ==============================
-# 🔐 AUTH MODE
+# 🔐 AUTH
 # ==============================
 if "auth_mode" not in st.session_state:
-    st.session_state.auth_mode = "login"  # login | register
+    st.session_state.auth_mode = "login"
 
-# ==============================
-# 🔐 GİRİŞ / KAYIT
-# ==============================
 if "user_id" not in st.session_state:
-    st.markdown("<h1 style='text-align:center'>SCRIBER AI</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color:white;text-align:center'>SCRIBER AI</h1>", unsafe_allow_html=True)
 
     if st.session_state.auth_mode == "login":
-        st.subheader("🔑 Giriş Yap")
-
         username = st.text_input("Kullanıcı adı")
         password = st.text_input("Şifre", type="password")
 
         if st.button("Giriş Yap"):
             res = supabase.table("users").select("*").eq("username", username).execute()
-
             if not res.data:
-                st.error("Böyle bir kullanıcı yok")
+                st.error("Kullanıcı yok")
                 st.stop()
 
             user = res.data[0]
@@ -124,24 +92,17 @@ if "user_id" not in st.session_state:
             st.session_state.user = user["username"]
             st.rerun()
 
-        st.markdown("---")
         st.markdown("Hesabın yok mu?")
-        if st.button("➡️ Kayıt Ol"):
+        if st.button("Kayıt Ol"):
             st.session_state.auth_mode = "register"
             st.rerun()
 
     else:
-        st.subheader("🆕 Kayıt Ol")
-
         username = st.text_input("Kullanıcı adı")
         password = st.text_input("Şifre", type="password")
         password2 = st.text_input("Şifre (tekrar)", type="password")
 
         if st.button("Hesap Oluştur"):
-            if not username or not password:
-                st.error("Boş bırakma")
-                st.stop()
-
             if password != password2:
                 st.error("Şifreler uyuşmuyor")
                 st.stop()
@@ -151,20 +112,91 @@ if "user_id" not in st.session_state:
                 st.error("Bu kullanıcı adı alınmış")
                 st.stop()
 
-            hashed = hash_password(password)
             supabase.table("users").insert({
                 "username": username,
-                "password_hash": hashed
+                "password_hash": hash_password(password)
             }).execute()
 
-            st.success("Kayıt başarılı, giriş yap")
+            st.success("Kayıt tamam, giriş yap")
             st.session_state.auth_mode = "login"
             st.rerun()
 
     st.stop()
 
 # ==============================
-# ✅ GİRİŞ BAŞARILI → DEVAM
+# 🧠 SESSION
 # ==============================
-st.markdown(f"<h2>Hoş geldin {st.session_state.user} 👋</h2>", unsafe_allow_html=True)
-st.write("Buradan sonrası chat ekranı, sidebar, geçmiş sohbetler vs.")
+if "chat_id" not in st.session_state:
+    st.session_state.chat_id = str(uuid.uuid4())
+if "history" not in st.session_state:
+    st.session_state.history = []
+
+# ==============================
+# 🧭 SIDEBAR
+# ==============================
+with st.sidebar:
+    st.image(LOGO_URL, width=80)
+    st.write(f"👤 **{st.session_state.user}**")
+
+    if st.button("➕ Yeni Sohbet", use_container_width=True):
+        st.session_state.chat_id = str(uuid.uuid4())
+        st.session_state.history = []
+        st.rerun()
+
+    st.write("---")
+    chats = supabase.table("messages") \
+        .select("chat_id, chat_title") \
+        .eq("username", st.session_state.user) \
+        .execute()
+
+    titles = {c["chat_id"]: c["chat_title"] for c in chats.data if c["chat_title"]}
+
+    for cid, title in titles.items():
+        if st.button(title, key=cid, use_container_width=True):
+            st.session_state.chat_id = cid
+            msgs = supabase.table("messages") \
+                .select("role,content") \
+                .eq("chat_id", cid) \
+                .order("created_at") \
+                .execute()
+            st.session_state.history = msgs.data
+            st.rerun()
+
+# ==============================
+# 🤖 CHAT
+# ==============================
+st.markdown('<h1 style="text-align:center; color:white;">SCRIBER AI</h1>', unsafe_allow_html=True)
+
+client = OpenAI(base_url=f"{NGROK_URL}/v1", api_key="lm-studio")
+
+for msg in st.session_state.history:
+    with st.chat_message(msg["role"], avatar=LOGO_URL if msg["role"]=="assistant" else None):
+        st.markdown(msg["content"])
+
+if prompt := st.chat_input("Scriber'a yaz..."):
+    sys_msg = f"Senin adın Scriber. Karşındaki kişi {st.session_state.user}. Samimi konuş."
+
+    st.session_state.history.append({"role":"user","content":prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    with st.chat_message("assistant", avatar=LOGO_URL):
+        placeholder = st.empty()
+        full = ""
+        res = client.chat.completions.create(
+            model="llama3-turkish",
+            messages=[{"role":"system","content":sys_msg}] + st.session_state.history,
+            stream=True
+        )
+        for c in res:
+            if c.choices[0].delta.content:
+                full += c.choices[0].delta.content
+                placeholder.markdown(full+"▌")
+        placeholder.markdown(full)
+        st.session_state.history.append({"role":"assistant","content":full})
+
+    title = prompt[:20] + "..."
+    supabase.table("messages").insert([
+        {"username":st.session_state.user,"role":"user","content":prompt,"chat_id":st.session_state.chat_id,"chat_title":title},
+        {"username":st.session_state.user,"role":"assistant","content":full,"chat_id":st.session_state.chat_id,"chat_title":title}
+    ]).execute()
