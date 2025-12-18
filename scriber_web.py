@@ -21,14 +21,14 @@ st.set_page_config(
 )
 
 # ==============================
-# 🎨 GÜNCEL MODERN UI (PREMIUM STYLE)
+# 🎨 DERHAL DÜZELTİLMİŞ CSS (WAVY + ŞEFFAF)
 # ==============================
 st.markdown("""
 <style>
 
-/* === ANA ARKAPLAN VE ANİMASYON === */
+/* === 1. WAVY HAREKETLİ ARKAPLAN (GERİ GELDİ) === */
 .stApp {
-    background: linear-gradient(-45deg, #0f0c29, #1a1a2e, #16213e, #0f3460);
+    background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1e215a);
     background-size: 400% 400%;
     animation: gradient 15s ease infinite;
 }
@@ -38,84 +38,66 @@ st.markdown("""
     100% { background-position: 0% 50%; }
 }
 
-/* === ALT PANEL TEMİZLİĞİ === */
-[data-testid="stBottom"], [data-testid="stBottomBlockContainer"] {
+/* === 2. BEYAZ ŞERİTLERİ YOK ET (KESİN ÇÖZÜM) === */
+/* Bu blok tüm alt paneli ve içindeki inatçı beyazlıkları şeffaf yapar */
+[data-testid="stBottom"], 
+[data-testid="stBottomBlockContainer"],
+header, 
+.st-emotion-cache-1p2n2i4, 
+.st-emotion-cache-128upt6, 
+.st-emotion-cache-1y34ygi {
+    background-color: transparent !important;
     background: transparent !important;
     border: none !important;
+    box-shadow: none !important;
 }
 
-/* === MODERN CHAT INPUT (SCRIBER'A YAZ) === */
+/* === 3. CHAT INPUT ALANI (SADECE KUTU GÖRÜNSÜN) === */
 div[data-testid="stChatInput"] {
-    background-color: rgba(255, 255, 255, 0.03) !important;
-    border: 1px solid rgba(106, 17, 203, 0.3) !important;
-    border-radius: 20px !important;
-    padding: 5px !important;
-    backdrop-filter: blur(10px); /* Buzlu cam efekti */
-    margin-bottom: 20px !important;
+    background-color: transparent !important;
+    border: none !important;
+    padding-bottom: 20px !important;
 }
 
 textarea[data-testid="stChatInputTextArea"] {
-    background-color: transparent !important;
-    color: #ffffff !important;
-    font-size: 16px !important;
-    border: none !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 2px solid #6a11cb !important;
+    border-radius: 15px !important;
+    color: white !important;
+    box-shadow: 0 0 10px rgba(106, 17, 203, 0.2) !important;
 }
 
-/* Odaklanınca Parlama Efekti */
-textarea[data-testid="stChatInputTextArea"]:focus {
-    box-shadow: 0 0 15px rgba(106, 17, 203, 0.4) !important;
-}
-
-/* === MESAJ BALONLARI TASARIMI === */
+/* === 4. MESAJ BALONLARI VE YAZILAR === */
 [data-testid="stChatMessage"] {
     background-color: rgba(255, 255, 255, 0.05) !important;
     border-radius: 15px !important;
-    margin-bottom: 10px !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Asistanın mesajı hafif farklı görünsün */
-[data-testid="stChatMessageAssistant"] {
-    background-color: rgba(106, 17, 203, 0.1) !important;
-    border: 1px solid rgba(106, 17, 203, 0.2) !important;
+h1, h2, h3, p, span, label, div {
+    color: white !important;
 }
 
-/* === SIDEBAR MODERNE ETKİSİ === */
+/* === 5. SIDEBAR VE DİĞERLERİ === */
 section[data-testid="stSidebar"] {
-    background-color: rgba(10, 10, 25, 0.8) !important;
-    backdrop-filter: blur(15px);
-    border-right: 1px solid rgba(106, 17, 203, 0.3) !important;
+    background-color: rgba(5, 5, 20, 0.9) !important;
+    border-right: 1px solid #6a11cb !important;
 }
 
-/* Sidebar Butonları */
-div.stButton > button {
-    background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%) !important;
-    border: none !important;
-    border-radius: 10px !important;
-    transition: 0.3s all ease;
-}
-div.stButton > button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(106, 17, 203, 0.4);
+/* Gönder butonunu beyazlıktan kurtar */
+button[data-testid="stChatInputSubmitButton"] {
+    background-color: transparent !important;
+    color: #6a11cb !important;
 }
 
-/* Başlık ve Yazı Renkleri */
-h1, h2, h3, p, span, label { 
-    color: #e0e0e0 !important; 
-    font-family: 'Segoe UI', sans-serif;
-    letter-spacing: 0.5px;
-}
-
-/* Scrollbar'ı şık yap */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(106, 17, 203, 0.3); border-radius: 10px; }
+/* Footer ve diğer gereksiz Streamlit öğelerini gizle */
+footer {visibility: hidden;}
+#MainMenu {visibility: hidden;}
 
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================
-# 🔐 FONKSİYONLAR & AUTH
+# 🔐 AUTH VE MANTIK (AYNI KALDI)
 # ==============================
 def hash_password(pw: str) -> str:
     return bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
@@ -127,7 +109,7 @@ if "auth_mode" not in st.session_state:
     st.session_state.auth_mode = "login"
 
 if "user" not in st.session_state:
-    st.markdown("<h1 style='text-align:center; padding-top: 50px;'>SCRIBER AI</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align:center'>SCRIBER AI</h1>", unsafe_allow_html=True)
     _, col, _ = st.columns([1,2,1])
     with col:
         if st.session_state.auth_mode == "login":
@@ -138,8 +120,7 @@ if "user" not in st.session_state:
                 if res.data and check_password(p, res.data[0]["password"]):
                     st.session_state.user = u
                     st.rerun()
-                else:
-                    st.error("Hatalı giriş")
+                else: st.error("Hatalı giriş")
             if st.button("Kayıt Ol"):
                 st.session_state.auth_mode = "register"; st.rerun()
         else:
@@ -154,32 +135,28 @@ if "user" not in st.session_state:
     st.stop()
 
 # ==============================
-# 🧠 CHAT MANTIĞI
+# 🧠 CHAT
 # ==============================
 if "chat_id" not in st.session_state: st.session_state.chat_id = str(uuid.uuid4())
 if "history" not in st.session_state: st.session_state.history = []
 
 with st.sidebar:
-    st.image(LOGO_URL, width=120)
-    st.markdown(f"### Hoş geldin, **{st.session_state.user}**")
-    st.divider()
+    st.image(LOGO_URL, width=100)
+    st.write(f"👤 {st.session_state.user}")
     if st.button("➕ Yeni Sohbet", use_container_width=True):
         st.session_state.history = []; st.rerun()
 
 st.markdown("<h1 style='text-align:center'>SCRIBER AI</h1>", unsafe_allow_html=True)
 client = OpenAI(base_url=f"{NGROK_URL}/v1", api_key="lm-studio")
 
-# Mesajları Görüntüle
 for msg in st.session_state.history:
     with st.chat_message(msg["role"], avatar=LOGO_URL if msg["role"]=="assistant" else None):
         st.markdown(msg["content"])
 
-# Giriş Alanı
-if prompt := st.chat_input("Scriber'a bir şeyler sor..."):
+if prompt := st.chat_input("Scriber'a yaz..."):
     st.session_state.history.append({"role":"user","content":prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
-        
     with st.chat_message("assistant", avatar=LOGO_URL):
         r = client.chat.completions.create(model="llama3-turkish", messages=st.session_state.history)
         reply = r.choices[0].message.content
