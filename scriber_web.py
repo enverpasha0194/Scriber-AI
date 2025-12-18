@@ -6,8 +6,8 @@ from supabase import create_client, Client
 # ============================================================
 # 🔑 SUPABASE BİLGİLERİNİ BURAYA GİR
 # ==============================
-SUPABASE_URL = "BURAYA_SUPABASE_URL_YAPIŞTIR"
-SUPABASE_KEY = "BURAYA_SUPABASE_ANON_KEY_YAPIŞTIR"
+SUPABASE_URL = "https://rhenrzjfkiefhzfkkwgv.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoZW5yempma2llZmh6Zmtrd2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNzY3MTMsImV4cCI6MjA4MTY1MjcxM30.gwjvIT5M8PyP9SBysXImyNblPm6XNwJTeZAayUeVCxU"
 NGROK_URL = "https://hydropathical-duodecastyle-camron.ngrok-free.dev"
 # ============================================================
 
@@ -129,3 +129,4 @@ if prompt := st.chat_input("Scriber'a bir şeyler sor..."):
 
         except Exception as e:
             st.error(f"Bağlantı Hatası: {e}")
+
