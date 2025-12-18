@@ -58,18 +58,19 @@ st.markdown(f"""
         border-right: 1px solid #6a11cb !important;
     }}
     
-    /* Sidebar'daki buton yazılarını okunur yap (Mor Arka Plan) */
+    /* Sidebar'daki butonların hem arka planını hem de yazı rengini aynı yap */
     div[data-testid="stSidebar"] button {{
-        background-color: #4b0082 !important;
-        color: #ffffff !important;
-        border: 1px solid #6a11cb !important;
+        background-color: #353254 !important;
+        color: #353254 !important; /* Yazı rengi de aynı */
+        border: 1px solid #353254 !important;
         border-radius: 8px !important;
         font-weight: 600 !important;
     }}
     
     div[data-testid="stSidebar"] button:hover {{
-        background-color: #6a11cb !important;
-        border-color: #ffffff !important;
+        background-color: #353254 !important;
+        border-color: #353254 !important;
+        color: #353254 !important;
     }}
 
     /* 4. GENEL ELEMENTLER */
