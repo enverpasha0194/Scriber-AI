@@ -170,3 +170,4 @@ if prompt := st.chat_input("Scriber'a yaz..."):
             {"username": st.session_state.user, "role": "user", "content": prompt, "chat_id": st.session_state.chat_id, "chat_title": chat_title},
             {"username": st.session_state.user, "role": "assistant", "content": full_res, "chat_id": st.session_state.chat_id, "chat_title": chat_title}
         ]).execute()
+
