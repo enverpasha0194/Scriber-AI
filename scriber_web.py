@@ -16,8 +16,8 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Sidebar'ın başlangıçta açık gelmesi için: initial_sidebar_state="expanded"
 st.set_page_config(
-    page_title="SCRIBER AI", 
-    page_icon=LOGO_URL, 
+    page_title="SCRIBER AI",
+    page_icon=LOGO_URL,
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -27,7 +27,7 @@ st.set_page_config(
 # ==============================
 st.markdown("""
 <style>
-/* WAVY ARKAPLAN */
+/* === WAVY ARKAPLAN === */
 .stApp {
     background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1e215a) !important;
     background-size: 400% 400% !important;
@@ -39,19 +39,21 @@ st.markdown("""
     100% { background-position: 0% 50%; }
 }
 
-/* SIDEBAR GÖRÜNÜRLÜĞÜ */
-[data-testid="stSidebar"] {
-    background-color: rgba(10, 10, 30, 0.95) !important;
+/* === SIDEBAR GÖRÜNÜRLÜĞÜ === */
+section[data-testid="stSidebar"] {
+    background-color: rgba(10, 10, 35, 0.95) !important;
     border-right: 1px solid #6a11cb !important;
-    min-width: 300px !important;
+    min-width: 250px !important;
 }
 
-/* Sidebar içindeki butonlar ve metinler için özel ayar */
-[data-testid="stSidebar"] button {
-    border: 1px solid rgba(255,255,255,0.1) !important;
+/* Sidebar içindeki metinler */
+section[data-testid="stSidebar"] .stText, 
+section[data-testid="stSidebar"] p, 
+section[data-testid="stSidebar"] span {
+    color: white !important;
 }
 
-/* ALT PANELİ ŞEFFAF YAP VE KUTUYU OTURT */
+/* === BEYAZ ŞERİTLERİ SİL VE KUTUYU OTURT === */
 [data-testid="stBottom"], [data-testid="stBottomBlockContainer"] {
     background: transparent !important;
     border: none !important;
@@ -61,18 +63,18 @@ div[data-testid="stChatInput"] {
     background-color: rgba(255,255,255,0.05) !important;
     border-radius: 20px !important;
     padding: 3px !important;
-    border: none !important;
 }
-
 textarea[data-testid="stChatInputTextArea"] {
     background-color: #ffffff !important;
     color: #000000 !important;
     border-radius: 17px !important;
 }
 
-/* GENEL METİN RENKLERİ (Sadece ana alan için) */
-[data-testid="stMain"] h1, [data-testid="stMain"] h2, [data-testid="stMain"] p, [data-testid="stMain"] span {
+/* === BUTONLAR === */
+button, div[data-testid="stButton"] > button {
+    background-color: #393863 !important;
     color: white !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
 }
 
 header, footer, #MainMenu { visibility: hidden; }
@@ -119,7 +121,7 @@ def load_chats():
 # ==============================
 with st.sidebar:
     st.image(LOGO_URL, width=100)
-    st.markdown(f"### 👋 Hoş geldin, **{st.session_state.user}**")
+    st.markdown(f"### 👋 Hoş geldin,\n**{st.session_state.user}**")
     
     if st.button("➕ Yeni Sohbet", use_container_width=True):
         st.session_state.chat_id = None
@@ -127,19 +129,20 @@ with st.sidebar:
         st.rerun()
     
     st.write("---")
-    st.markdown("### 📜 Sohbetler")
+    st.subheader("📜 Sohbetler")
     
-    chats = load_chats()
-    if chats:
-        for c in chats:
-            # Tıklanan sohbeti yükle
-            if st.button(f"💬 {c['title'][:25]}", key=f"chat_{c['id']}", use_container_width=True):
+    past_chats = load_chats()
+    if past_chats:
+        for c in past_chats:
+            # Mevcut seçili sohbeti belirtmek için küçük bir görsel fark
+            label = f"💬 {c['title'][:20]}"
+            if st.button(label, key=f"btn_{c['id']}", use_container_width=True):
                 st.session_state.chat_id = c['id']
                 msgs = supabase.table("scriber_messages").select("*").eq("chat_id", c['id']).order("created_at").execute().data
                 st.session_state.history = [{"role": m["role"], "content": m["content"]} for m in msgs]
                 st.rerun()
     else:
-        st.info("Henüz geçmiş sohbet yok.")
+        st.write("Henüz sohbet yok.")
 
 # ==============================
 # 🧠 CHAT EKRANI
@@ -152,7 +155,7 @@ for msg in st.session_state.history:
         st.markdown(msg["content"])
 
 if prompt := st.chat_input("Scriber'a yaz..."):
-    # Yeni sohbet ise oluştur
+    # Yeni Sohbet Oluşturma
     if st.session_state.chat_id is None:
         new_chat = supabase.table("scriber_chats").insert({
             "username": st.session_state.user,
@@ -161,7 +164,7 @@ if prompt := st.chat_input("Scriber'a yaz..."):
         if new_chat.data:
             st.session_state.chat_id = new_chat.data[0]["id"]
 
-    # Mesajları kaydet
+    # Mesajları Kaydet
     st.session_state.history.append({"role": "user", "content": prompt})
     supabase.table("scriber_messages").insert({"chat_id": st.session_state.chat_id, "role": "user", "content": prompt}).execute()
     
