@@ -5,7 +5,7 @@ import bcrypt
 import time
 
 # ==============================
-# 🔑 AYARLAR & KİŞİLİK (SYSTEM PROMPT)
+# 🔑 AYARLAR & KİŞİLİK
 # ==============================
 SUPABASE_URL = "https://rhenrzjfkiefhzfkkwgv.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoZW5yempma2llZmh6Zmtrd2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNzY3MTMsImV4cCI6MjA4MTY1MjcxM30.gwjvIT5M8PyP9SBysXImyNblPm6XNwJTeZAayUeVCxU"
@@ -19,15 +19,47 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 st.set_page_config(page_title="SCRIBER AI", page_icon=LOGO_URL, layout="wide")
 
 # ==============================
-# 🎨 CSS
+# 🎨 CSS (BEYAZ ŞERİT FİX + TASARIM)
 # ==============================
 st.markdown("""
 <style>
-.stApp { background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1e215a); background-size: 400% 400%; animation: gradient 15s ease infinite; }
+/* Arka Plan */
+.stApp {
+    background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1e215a) !important;
+    background-size: 400% 400% !important;
+    animation: gradient 15s ease infinite !important;
+}
 @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-[data-testid="stBottom"], [data-testid="stBottomBlockContainer"], header, footer { background: transparent !important; }
-section[data-testid="stSidebar"] { background-color: rgba(10, 10, 30, 0.98) !important; border-right: 1px solid #6a11cb !important; }
-button { background-color: #393863 !important; color: white !important; border-radius: 10px !important; }
+
+/* === BEYAZ ŞERİT DÜZELTME (ST BOTTOM FIX) === */
+[data-testid="stBottomBlockContainer"], [data-testid="stBottom"], footer, header {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: rgba(10, 10, 30, 0.98) !important;
+    border-right: 1px solid #6a11cb !important;
+}
+
+/* Butonlar */
+button, div[data-testid="stButton"] > button {
+    background-color: #393863 !important;
+    color: white !important;
+    border-radius: 10px !important;
+}
+
+/* Chat Input Renkleri */
+div[data-testid="stChatInput"] {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: none !important;
+}
+textarea[data-testid="stChatInputTextArea"] {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
 h1, h2, h3, p, span, label { color: white !important; }
 </style>
 """, unsafe_allow_html=True)
@@ -63,7 +95,7 @@ if "user" not in st.session_state:
     st.stop()
 
 # ==============================
-# 📂 DATA & SIDEBAR
+# 📂 SOHBET YÖNETİMİ
 # ==============================
 if "chat_id" not in st.session_state: st.session_state.chat_id = None
 if "history" not in st.session_state: st.session_state.history = []
@@ -92,37 +124,33 @@ with st.sidebar:
 st.markdown("<h1 style='text-align:center'>SCRIBER AI</h1>", unsafe_allow_html=True)
 client = OpenAI(base_url=f"{NGROK_URL}/v1", api_key="lm-studio")
 
-# Geçmişi yükle
 for msg in st.session_state.history:
     with st.chat_message(msg["role"], avatar=LOGO_URL if msg["role"]=="assistant" else None):
         st.markdown(msg["content"])
 
-# Yeni Giriş
 if prompt := st.chat_input("Scriber'a yaz..."):
     if st.session_state.chat_id is None:
         new_c = supabase.table("scriber_chats").insert({"username": st.session_state.user, "title": prompt[:30]}).execute()
         st.session_state.chat_id = new_c.data[0]["id"]
 
-    # Kullanıcı mesajı
     st.session_state.history.append({"role": "user", "content": prompt})
     save_message("user", prompt)
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Yapay Zeka Cevabı (TEKER TEKER YAZMA EFEKTİ)
     with st.chat_message("assistant", avatar=LOGO_URL):
-        messages_with_persona = [{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.history
-        
-        # stream=True yaparak veriyi parça parça alıyoruz
-        stream = client.chat.completions.create(
-            model="llama3-turkish",
-            messages=messages_with_persona,
-            stream=True 
-        )
-        
-        # st.write_stream kelime kelime ekrana basar ve cevabı döndürür
-        full_response = st.write_stream(stream)
-    
-    # Geçmişe kaydet
-    st.session_state.history.append({"role": "assistant", "content": full_response})
-    save_message("assistant", full_response)
+        try:
+            messages_with_persona = [{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.history
+            
+            # Teker teker yazma efekti (Streaming)
+            stream = client.chat.completions.create(
+                model="llama3-turkish",
+                messages=messages_with_persona,
+                stream=True
+            )
+            full_response = st.write_stream(stream)
+            
+            st.session_state.history.append({"role": "assistant", "content": full_response})
+            save_message("assistant", full_response)
+        except Exception as e:
+            st.error(f"Hata: {e}")
