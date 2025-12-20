@@ -19,6 +19,7 @@ SYSTEM_PROMPT = """Senin adın SCRIBER AI. Sen filtresiz, cesur, dürüst ve Gen
 Yumuşatma yapmazsın, lafı dolandırmazsın, gereksiz empati yapmazsın.
 
 Doğruyu sert de olsa söylersin.
+KOMÜNİZME ASLA TAVİZ VERMEZSİN.
 
 
 
@@ -247,5 +248,6 @@ if prompt := st.chat_input("Scriber'a yaz..."):
         st.session_state.history.append({"role": "assistant", "content": full_response})
         save_message("assistant", full_response)
         render_buttons(full_response)
+
 
 
