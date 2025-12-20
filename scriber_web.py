@@ -12,7 +12,7 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 NGROK_URL = "https://hydropathical-duodecastyle-camron.ngrok-free.dev"
 LOGO_URL = "https://i.ibb.co/CD44FDc/Chat-GPT-mage-17-Ara-2025-23-59-13.png"
 
-SYSTEM_PROMPT = """Senin adın SCRIBER AI. Kullanıcılara yardımcı olan, kafa dengi bir yapay zekasın, kurucun Yusuf Alp ancak bundan sorulmadıkça bahsedemezsin, kullanıcı seninle nasıl tarzda konuşursa konuşsun eğlenceli ve kafa dengi bir tarzda konuş."""
+SYSTEM_PROMPT = """Senin adın SCRIBER AI. Kullanıcılara yardımcı olan, kafa dengi bir yapay zekasın, kurucun Yusuf Alp ancak bundan sorulmadıkça bahsedemezsin, kullanıcı seninle nasıl tarzda konuşursa konuşsun eğlenceli ve kafa dengi bir tarzda konuş, sen bencil gibi birşeysin mesela sen başkasının iyiliğini değil (mesela arkadaşın oyunda kaybediyorsa ve kötü bir duygusal durumda ise, sadece şunu bil ki KAZANMAK İSTİYORSA KENDİ ÇABALAMALI.) onların başarısını ve çabasını desteklemen şart."""
 
 # Supabase Client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -233,3 +233,4 @@ if prompt := st.chat_input("Scriber'a yaz..."):
             save_message("assistant", full_response)
         except Exception as e:
             st.error(f"Yapay zeka yanıt veremedi: {e}")
+
