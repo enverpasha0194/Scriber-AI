@@ -1,3 +1,4 @@
+
 import streamlit as st
 from openai import OpenAI
 from supabase import create_client, Client
@@ -5,6 +6,10 @@ import bcrypt
 import time
 import html
 import streamlit.components.v1 as components
+import os
+
+SUPABASE_URL = os.environ["SUPABASE_URL"]
+SUPABASE_KEY = os.environ["SUPABASE_KEY"]
 
 # ==============================
 # 🔑 AYARLAR & KİŞİLİK (SYSTEM PROMPT)
@@ -185,3 +190,4 @@ if prompt := st.chat_input("Scriber'a yaz..."):
         st.session_state.history.append({"role": "assistant", "content": full_response})
         save_message("assistant", full_response)
         render_buttons(full_response)
+
