@@ -202,6 +202,11 @@ for msg in st.session_state.history:
             render_buttons(msg["content"])
 
 if prompt := st.chat_input("Scriber'a yaz..."):
+    # 1. Önce kullanıcının yazdığı mesajı ekranda hemen gösterelim
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    # Chat ID kontrolü ve mesajı kaydetme işlemleri
     if st.session_state.chat_id is None:
         chat = supabase.table("scriber_chats").insert({
             "username": st.session_state.user,
@@ -211,6 +216,21 @@ if prompt := st.chat_input("Scriber'a yaz..."):
 
     st.session_state.history.append({"role": "user", "content": prompt})
     save_message("user", prompt)
+
+    # 2. Asistan cevabını oluşturup gösterelim
+    with st.chat_message("assistant"):
+        stream = client.chat.completions.create(
+            model="llama3-turkish",
+            messages=[{"role":"system","content":SYSTEM_PROMPT}] + st.session_state.history,
+            stream=True
+        )
+        response = st.write_stream(stream)
+
+    st.session_state.history.append({"role": "assistant", "content": response})
+    save_message("assistant", response)
+    
+    # 3. Sayfayı yenileyerek state'i ve butonları oturtalım (Opsiyonel ama stabilite sağlar)
+    st.rerun()
 
     with st.chat_message("assistant"):
         stream = client.chat.completions.create(
@@ -223,4 +243,5 @@ if prompt := st.chat_input("Scriber'a yaz..."):
     st.session_state.history.append({"role": "assistant", "content": response})
     save_message("assistant", response)
     render_buttons(response)
+
 
