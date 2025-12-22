@@ -189,4 +189,62 @@ if prompt := st.chat_input("Scriber'a yaz..."):
         save_message("assistant", full_response)
         render_buttons(full_response)
 
+# ==============================
+# 🛡️ ADMIN PANELİ (READ-ONLY)
+# ==============================
+if st.session_state.user == "admin":
+    st.write("---")
+    st.markdown("## 🛡️ Admin Paneli (Read-Only)")
+
+    search_username = st.text_input("🔍 Kullanıcı adına göre ara")
+
+    if search_username:
+        users = supabase.table("scriber_users") \
+            .select("username") \
+            .ilike("username", f"%{search_username}%") \
+            .order("username") \
+            .execute() \
+            .data
+
+        if not users:
+            st.info("Kullanıcı bulunamadı.")
+        else:
+            for u in users:
+                uname = u["username"]
+
+                with st.expander(f"👤 {uname}", expanded=False):
+                    chats = supabase.table("scriber_chats") \
+                        .select("*") \
+                        .eq("username", uname) \
+                        .order("created_at", desc=True) \
+                        .execute() \
+                        .data
+
+                    if not chats:
+                        st.write("Bu kullanıcının sohbeti yok.")
+                    else:
+                        for chat in chats:
+                            st.markdown(f"### 💬 {chat['title']}")
+
+                            messages = supabase.table("scriber_messages") \
+                                .select("*") \
+                                .eq("chat_id", chat["id"]) \
+                                .order("created_at") \
+                                .execute() \
+                                .data
+
+                            for m in messages:
+                                role = "🧑 Kullanıcı" if m["role"] == "user" else "🤖 Asistan"
+                                st.markdown(
+                                    f"""
+                                    <div style="padding:8px; margin-bottom:6px;
+                                    background:rgba(255,255,255,0.06);
+                                    border-radius:8px;">
+                                        <b>{role}</b><br>
+                                        {html.escape(m["content"])}
+                                    </div>
+                                    """,
+                                    unsafe_allow_html=True
+                                )
+
 
