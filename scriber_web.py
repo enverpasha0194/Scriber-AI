@@ -13,7 +13,7 @@ import os
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_KEY = os.environ["SUPABASE_KEY"]
 
-# ==============================
+# ===============================
 # ⚙️ AYARLAR
 # ==============================
 NGROK_URL = "https://hydropathical-duodecastyle-camron.ngrok-free.dev"
@@ -254,6 +254,7 @@ if prompt := st.chat_input("Scriber'a yaz..."):
     st.session_state.history.append({"role": "assistant", "content": response})
     save_message("assistant", response)
     render_buttons(response)
+
 
 
 
