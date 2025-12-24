@@ -44,12 +44,12 @@ html_code = """
 </head>
 <body>
     <div class="container">
-        <img src="https://media.tenor.com/K5wSW-CGK9wAAAAi/maintenance-under-maintenance.gif">
-        <h1>UYGULAMA ÇALIŞMA ALTINDA!</h1>
+        <img src="https://media.tenor.com/89i-s0uzMMwAAAAi/corona-closed.gif">
+        <h1>Kapatıldı.</h1>
         <p>
-            Sistem şu an güncelleme modunda.<br>
-            Performans artışı, stabilite ve birkaç gizli dokunuş yapılıyor.<br><br>
-            Birazdan buradayız, Kahveni al gel. ☕
+            KAPALIYIZ!<br>
+            Uygulamamıza karşı gelen eleştiriler ve şikayetlerden ötürü Scriber AI'ı uzun süreli kapatma kararı aldık.<br><br>
+            Bizi destekleyen herkese teşekkür ederiz.
         </p>
     </div>
 </body>
@@ -57,3 +57,4 @@ html_code = """
 """
 
 components.html(html_code, height=600)
+
