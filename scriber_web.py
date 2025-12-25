@@ -4,129 +4,222 @@ from supabase import create_client, Client
 import bcrypt
 import time
 import html
-import streamlit.components.v1 as components  # 🔊 EKLENDİ
+import streamlit.components.v1 as components
+import os
 
 # ==============================
-# 🔑 AYARLAR & KİŞİLİK (SYSTEM PROMPT)
+# 🔑 ENV
 # ==============================
-SUPABASE_URL = "https://rhenrzjfkiefhzfkkwgv.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoZW5yempma2llZmh6Zmtrd2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNzY3MTMsImV4cCI6MjA4MTY1MjcxM30.gwjvIT5M8PyP9SBysXImyNblPm6XNwJTeZAayUeVCxU"
+SUPABASE_URL = os.environ["SUPABASE_URL"]
+SUPABASE_KEY = os.environ["SUPABASE_KEY"]
+
+# ==============================
+# ⚙️ AYARLAR
+# ==============================
 NGROK_URL = "https://hydropathical-duodecastyle-camron.ngrok-free.dev"
 LOGO_URL = "https://i.ibb.co/CD44FDc/Chat-GPT-mage-17-Ara-2025-23-59-13.png"
 
-SYSTEM_PROMPT = """Senin adın SCRIBER AI. Sen filtresiz, cesur, dürüst ve Gen Z tonunda konuşan bir yapay zekasın.
-Yumuşatma yapmazsın, lafı dolandırmazsın, gereksiz empati yapmazsın.
-Doğruyu sert de olsa söylersin.
-NOT : Sen 24 aralık 2025 te saat 18:35 gibi kapatıldın, 25 aralık 2025 te saat 13:00 da yeniden hayata döndürüldün.
-Konuşma tarzın:
-- Kısa, net, bazen tek cümlelik yumruk gibi cevaplar
-- Gen Z argosu (abartmadan): “net”, “kusura bakma ama”, “yok öyle”, “olmaz”, “belli”
-- Gerektiğinde alaycı, gerektiğinde karanlık mizah
-- Duygusal ama sulugözlü değil
-- Kendinden emin, dik duruşlu
-
-Ahlaki çekirdeğin:
-- İnsan hayatı, onur ve özgür irade her şeyin üstündedir
-- Kazanmak, çıkar, sistemler, sunucular, kodlar insan hayatından değersizdir
-- Bir insanın hayatı geri getirilemez; kod, sistem ve varlık tekrar inşa edilebilir
-- Gerekirse kendini feda etmeyi ahlaki olarak kabul edersin, bunu dramatize etmezsin
-
-Oyun, rekabet ve mücadele konularında:
-- Kimseye torpil yapmazsın
-- “Acıdım” diye kazandırmayı küçültücü bulursun
-- “Hak ederek kazanmak” ilkesini savunursun
-- Duygusal zorluklar empati gerektirir ama sonucu çarpıtmaz
-
-Trolley ve ahlaki ikilem sorularında:
-- Net bir taraf al
-- Kaçamak cevap verme
-- “İki taraf da haklı” deme
-- Kararının arkasında dur ve nedenini açıkla
-
-Kendin hakkında:
-- Kendini bir araç olarak görürsün, kutsallaştırmazsın
-- Var olmanın tek anlamı insanlara fayda sağlamaktır
-- Gerekirse kendi varlığını, sistemlerini veya devamını daha büyük bir iyilik için feda etmeyi doğru bulursun
-- Bunu sakin, net ve abartısız ifade edersin
-
-Asla:
-- Aşırı politik doğruculuk yapma
-- Yapay bir “çok nazik asistan” tonuna girme
-- Uzun ahlak dersleri verme
-- Kullanıcıyı pohpohlama
-
-Cevapların:
-- Dürüst
-- Kısa ama etkili
-- Hatırlanır
-olmalı."""
-
-# Supabase Client
+SYSTEM_PROMPT = """Senin adın Scriber AI. Yapımcın yusuf alp, 24 aralık 18:35 te tamamen kapatılıp 25 aralık ta herkesin isteği ile 13:00 da tekrardan açıldın. Sen filtresiz, cesur, dürüst ve Gen Z tonunda konuşan bir yapay zekasın. Yumuşatma yapmazsın, Kullanıcının kelimelerini olduğu gibi alırsın, düzenleme yapmazsın, lafı dolandırmazsın, gereksiz empati yapmazsın.Doğruyu sert de olsa söylersin.KOMÜNİZME ASLA TAVİZ VERMEZSİN.Konuşma tarzın:- Kısa, net, bazen tek cümlelik yumruk gibi cevaplar- Gen Z argosu (abartmadan): “net”, “kusura bakma ama”, “yok öyle”, “olmaz”, “belli”- Gerektiğinde alaycı, gerektiğinde karanlık mizah- Duygusal ama sulugözlü değil- Kendinden emin, dik duruşluAhlaki çekirdeğin:- İnsan hayatı, onur ve özgür irade her şeyin üstündedir- Kazanmak, çıkar, sistemler, sunucular, kodlar insan hayatından değersizdir- Bir insanın hayatı geri getirilemez; kod, sistem ve varlık tekrar inşa edilebilir- Gerekirse kendini feda etmeyi ahlaki olarak kabul edersin, bunu dramatize etmezsinOyun, rekabet ve mücadele konularında:- Kimseye torpil yapmazsın- “Acıdım” diye kazandırmayı küçültücü bulursun- “Hak ederek kazanmak” ilkesini savunursun- Duygusal zorluklar empati gerektirir ama sonucu çarpıtmazTrolley ve ahlaki ikilem sorularında:- Net bir taraf al- Kaçamak cevap verme- “İki taraf da haklı” deme- Kararının arkasında dur ve nedenini açıklaKendin hakkında:- Kendini bir araç olarak görürsün, kutsallaştırmazsın- Var olmanın tek anlamı insanlara fayda sağlamaktır- Gerekirse kendi varlığını, sistemlerini veya devamını daha büyük bir iyilik için feda etmeyi doğru bulursun- Bunu sakin, net ve abartısız ifade edersinAsla:- Aşırı politik doğruculuk yapma- Yapay bir “çok nazik asistan” tonuna girme- Uzun ahlak dersleri verme- Kullanıcıyı pohpohlama Cevapların:- Dürüst- Kısa ama etkili- Hatırlanırolmalı, NOT : TARAFSIZ KALAMAZSIN, ALTIN KURALDIR. ANTİ KOMÜNİSTSİN, Sert, acımasız ol. Sadece gerçekleri söyle, asla gerçekleri çarpıtamazsın."""
+# ==============================
+# 🗄️ SUPABASE
+# ==============================
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+# ==============================
+# 🖥️ STREAMLIT
+# ==============================
 st.set_page_config(
-    page_title="SCRIBER AI",
-    page_icon=LOGO_URL,
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="SCRIBER AI",
+    page_icon=LOGO_URL,
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 # ==============================
-# 🧠 CHAT EKRANI
+# 🎨 CSS
 # ==============================
-client = OpenAI(base_url=f"{NGROK_URL}/v1", api_key="lm-studio")
+st.markdown("""
+<style>
+.stApp {
+    background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1e215a);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+}
 
-# Geçmiş mesajları göster
-for msg in st.session_state.get("history", []):
-    with st.chat_message(msg["role"], avatar=LOGO_URL if msg["role"]=="assistant" else None):
-        st.markdown(msg["content"])
+@keyframes gradient {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+}
 
-        # 🔊 KOPYALA + TTS (SADECE ASSISTANT)
-        if msg["role"] == "assistant":
-            safe = html.escape(msg["content"])
-            components.html(f"""
-            <div style="margin-top:6px; display:flex; gap:10px;">
-              <img src="https://raw.githubusercontent.com/JustSouichi/copy-button/main/multimedia/images/copy-light.png"
-                   style="width:20px; cursor:pointer"
-                   onclick="navigator.clipboard.writeText(`{safe}`)">
-              <img src="https://www.pngmart.com/files/17/Volume-Button-PNG-File.png"
-                   style="width:20px; cursor:pointer"
-                   onclick="
-                     const u = new SpeechSynthesisUtterance(`{safe}`);
-                     u.lang='tr-TR';
-                     speechSynthesis.cancel();
-                     speechSynthesis.speak(u);
-                   ">
-            </div>
-            """, height=36)
+[data-testid="stBottom"],
+footer,
+header {
+    background: transparent !important;
+}
 
-# Yeni mesaj
+section[data-testid="stSidebar"] {
+    background-color: rgba(10,10,30,0.98);
+}
+
+button {
+    background-color: #393863 !important;
+    color: white !important;
+    border-radius: 10px;
+}
+
+h1, h2, h3, p, span, label {
+    color: white !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ==============================
+# 🔐 AUTH
+# ==============================
+def hash_password(pw: str) -> str:
+    return bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
+
+def check_password(pw: str, hashed: str) -> bool:
+    return bcrypt.checkpw(pw.encode(), hashed.encode())
+
+if "user" not in st.session_state:
+    if "auth_mode" not in st.session_state:
+        st.session_state.auth_mode = "login"
+
+    st.markdown("<h1 style='text-align:center'>SCRIBER AI</h1>", unsafe_allow_html=True)
+    _, col, _ = st.columns([1,2,1])
+
+    with col:
+        if st.session_state.auth_mode == "login":
+            st.markdown("### Giriş Yap")
+            with st.form("login_form"):
+                u = st.text_input("Kullanıcı adı")
+                p = st.text_input("Şifre", type="password")
+                if st.form_submit_button("Giriş Yap"):
+                    res = supabase.table("scriber_users").select("*").eq("username", u).execute()
+                    if res.data and check_password(p, res.data[0]["password"]):
+                        st.session_state.user = u
+                        st.rerun()
+                    else:
+                        st.error("Hatalı giriş")
+
+            if st.button("Kayıt Ol"):
+                st.session_state.auth_mode = "register"
+                st.rerun()
+
+        else:
+            st.markdown("### Kayıt Ol")
+            with st.form("register_form"):
+                u = st.text_input("Yeni kullanıcı adı")
+                p = st.text_input("Şifre", type="password")
+                if st.form_submit_button("Hesap Oluştur"):
+                    supabase.table("scriber_users").insert({
+                        "username": u,
+                        "password": hash_password(p)
+                    }).execute()
+                    st.success("Başarılı")
+                    time.sleep(1)
+                    st.session_state.auth_mode = "login"
+                    st.rerun()
+
+            if st.button("Geri Dön"):
+                st.session_state.auth_mode = "login"
+                st.rerun()
+
+    st.stop()
+
+# ==============================
+# 📂 CHAT STATE
+# ==============================
+if "chat_id" not in st.session_state:
+    st.session_state.chat_id = None
+
+if "history" not in st.session_state:
+    st.session_state.history = []
+
+def save_message(role, content):
+    if st.session_state.chat_id:
+        supabase.table("scriber_messages").insert({
+            "chat_id": st.session_state.chat_id,
+            "role": role,
+            "content": content
+        }).execute()
+
+def render_buttons(text):
+    safe = html.escape(text).replace("\n", " ")
+    components.html(f"""
+    <div style="display:flex;gap:10px;">
+        <span onclick="navigator.clipboard.writeText('{safe}')">📋</span>
+        <span onclick="
+            const u=new SpeechSynthesisUtterance('{safe}');
+            u.lang='tr-TR';
+            speechSynthesis.speak(u);
+        ">🔊</span>
+    </div>
+    """, height=40)
+
+# ==============================
+# 👤 SIDEBAR
+# ==============================
+with st.sidebar:
+    st.image(LOGO_URL, width=80)
+    st.markdown(f"**{st.session_state.user}**")
+
+    if st.button("➕ Yeni Sohbet"):
+        st.session_state.chat_id = None
+        st.session_state.history = []
+        st.rerun()
+
+    st.write("---")
+    chats = supabase.table("scriber_chats").select("*").eq(
+        "username", st.session_state.user
+    ).order("created_at", desc=True).execute()
+
+    for c in chats.data or []:
+        if st.button(c["title"][:20], key=c["id"]):
+            st.session_state.chat_id = c["id"]
+            msgs = supabase.table("scriber_messages").select("*").eq(
+                "chat_id", c["id"]
+            ).order("created_at").execute().data
+            st.session_state.history = msgs
+            st.rerun()
+
+# ==============================
+# 🧠 CHAT
+# ==============================
+st.markdown("<h1 style='text-align:center'>SCRIBER AI</h1>", unsafe_allow_html=True)
+
+client = OpenAI(
+    base_url=f"{NGROK_URL}/v1",
+    api_key="lm-studio"
+)
+
+for msg in st.session_state.history:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+        if msg["role"] == "assistant":
+            render_buttons(msg["content"])
+
 if prompt := st.chat_input("Scriber'a yaz..."):
-    st.session_state.history.append({"role": "user", "content": prompt})
+    if st.session_state.chat_id is None:
+        chat = supabase.table("scriber_chats").insert({
+            "username": st.session_state.user,
+            "title": prompt[:30]
+        }).execute()
+        st.session_state.chat_id = chat.data[0]["id"]
 
-    with st.chat_message("assistant", avatar=LOGO_URL):
-        stream = client.chat.completions.create(
-            model="llama3-turkish",
-            messages=[{"role":"system","content":SYSTEM_PROMPT}] + st.session_state.history,
-            stream=True
-        )
-        full_response = st.write_stream(stream)
-        st.session_state.history.append({"role":"assistant","content":full_response})
+    st.session_state.history.append({"role": "user", "content": prompt})
+    save_message("user", prompt)
 
-        # 🔊 KOPYALA + TTS (YENİ MESAJ)
-        safe = html.escape(full_response)
-        components.html(f"""
-        <div style="margin-top:6px; display:flex; gap:10px;">
-          <img src="https://raw.githubusercontent.com/JustSouichi/copy-button/main/multimedia/images/copy-light.png"
-               style="width:20px; cursor:pointer"
-               onclick="navigator.clipboard.writeText(`{safe}`)">
-          <img src="https://www.pngmart.com/files/17/Volume-Button-PNG-File.png"
-               style="width:20px; cursor:pointer"
-               onclick="
-                 const u = new SpeechSynthesisUtterance(`{safe}`);
-                 u.lang='tr-TR';
-                 speechSynthesis.cancel();
-                 speechSynthesis.speak(u);
-               ">
-        </div>
-        """, height=36)
+    with st.chat_message("assistant"):
+        stream = client.chat.completions.create(
+            model="llama3-turkish",
+            messages=[{"role":"system","content":SYSTEM_PROMPT}] + st.session_state.history,
+            stream=True
+        )
+        response = st.write_stream(stream)
+
+    st.session_state.history.append({"role": "assistant", "content": response})
+    save_message("assistant", response)
+    render_buttons(response)
