@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 import time
-import id
+import uuid
 from supabase import create_client
 
 # =========================
@@ -187,4 +187,5 @@ if user_input:
             time.sleep(0.01)
 
     st.rerun()
+
 
