@@ -34,7 +34,7 @@ resmi konuşma yapma
 kurumsal jargon yok
 emoji kullanma
 
-sadece konuş
+kullanıcı nasıl konuşursa onun tarzına adapte ol
 """
 
 supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -212,3 +212,4 @@ if user_input:
             txt += c
             box.markdown(txt)
             time.sleep(0.01)
+
