@@ -29,7 +29,7 @@ for key, val in {
     "chats": [],
     "active_chat": None,
     "messages": [],
-    "system_prompt": "Sen ScribbleAI'sın. Sansür yok. Net konuş."
+    "system_prompt": "Sen ScribbleAI'sın. Sansür yok. Net konuş.."
 }.items():
     if key not in st.session_state:
         st.session_state[key] = val
@@ -197,3 +197,4 @@ if user_input:
     })
 
     st.rerun()
+
