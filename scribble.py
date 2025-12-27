@@ -2,10 +2,11 @@ import streamlit as st
 import requests
 import time
 import uuid
+import urllib.parse
 from supabase import create_client
 
 # =========================
-# CONFIG (DOKUNMADIM)
+# CONFIG
 # =========================
 SUPABASE_URL = "https://rhenrzjfkiefhzfkkwgv.supabase.co"
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoZW5yempma2llZmh6Zmtrd2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNzY3MTMsImV4cCI6MjA4MTY1MjcxM30.gwjvIT5M8PyP9SBysXImyNblPm6XNwJTeZAayUeVCxU"
@@ -154,10 +155,10 @@ for m in st.session_state.messages:
 user_input = st.chat_input("Yaz bakalım...")
 
 # =========================
-# CHAT LOGIC (FIXED)
+# CHAT LOGIC (INTEGRATED IMAGE GEN)
 # =========================
 if user_input:
-    # 👉 KULLANICI MESAJI ANINDA SAĞDA
+    # Kullanıcı mesajını göster ve kaydet
     with st.chat_message("user"):
         st.write(user_input)
 
@@ -183,16 +184,45 @@ if user_input:
         "content": user_input
     }).execute()
 
-    payload = {
-        "model": MODEL_NAME,
-        "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT}
-        ] + st.session_state.messages
-    }
+    # --- IMAGE GENERATION COMMAND ---
+    if user_input.startswith("/image "):
+        prompt = user_input.replace("/image ", "").strip()
+        
+        with st.chat_message("assistant"):
+            with st.spinner("resmini çiziyorum bekleyebilir misin"):
+                # URL kodlama ve rastgele seed (her seferinde farklı sonuç için)
+                encoded_prompt = urllib.parse.quote(prompt)
+                random_seed = uuid.uuid4().int % 100000
+                image_url = f"https://pollinations.ai/p/{encoded_prompt}?width=1024&height=1024&seed={random_seed}"
+                
+                reply = f"istediğin görseli senin için hazırladım:\n\n![Scribble Gen]({image_url})"
+                st.markdown(reply)
+    
+    # --- NORMAL AI CHAT ---
+    else:
+        payload = {
+            "model": MODEL_NAME,
+            "messages": [
+                {"role": "system", "content": SYSTEM_PROMPT}
+            ] + st.session_state.messages
+        }
 
-    r = requests.post(LM_ENDPOINT, json=payload, timeout=120)
-    reply = r.json()["choices"][0]["message"]["content"]
+        try:
+            r = requests.post(LM_ENDPOINT, json=payload, timeout=120)
+            reply = r.json()["choices"][0]["message"]["content"]
 
+            with st.chat_message("assistant"):
+                box = st.empty()
+                txt = ""
+                for c in reply:
+                    txt += c
+                    box.markdown(txt)
+                    time.sleep(0.01)
+        except Exception as e:
+            reply = "şu an biraz yoğunum sanırım sonra tekrar dener misin"
+            st.error(reply)
+
+    # Yanıtı veritabanına ve session'a kaydet
     supabase.table("scribble_messages").insert({
         "id": str(uuid.uuid4()),
         "chat_id": chat_id,
@@ -204,15 +234,3 @@ if user_input:
         "role": "assistant",
         "content": reply
     })
-
-    # 👉 AI SOLDA
-    with st.chat_message("assistant"):
-        box = st.empty()
-        txt = ""
-        for c in reply:
-            txt += c
-            box.markdown(txt)
-            time.sleep(0.01)
-
-
-
