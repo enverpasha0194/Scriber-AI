@@ -5,7 +5,7 @@ import uuid
 from supabase import create_client
 
 # =========================
-# CONFIG
+# CONFIG (DOKUNMADIM)
 # =========================
 SUPABASE_URL = "https://rhenrzjfkiefhzfkkwgv.supabase.co"
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoZW5yempma2llZmh6Zmtrd2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNzY3MTMsImV4cCI6MjA4MTY1MjcxM30.gwjvIT5M8PyP9SBysXImyNblPm6XNwJTeZAayUeVCxU"
@@ -35,7 +35,7 @@ if "active_chat" not in st.session_state:
     st.session_state.active_chat = None
 
 # =========================
-# AUTH
+# AUTH (USERNAME ONLY)
 # =========================
 def login(username, password):
     r = supabase.table("scribble_users") \
@@ -55,7 +55,7 @@ def register(username, password):
         return None
 
     user = {
-        "id": str(id.id4()),
+        "id": str(uuid.uuid4()),
         "username": username,
         "password": password
     }
@@ -63,7 +63,7 @@ def register(username, password):
     return user
 
 # =========================
-# LOGIN SCREEN
+# LOGIN UI
 # =========================
 if not st.session_state.user:
     st.title("✍️ Scriber AI")
@@ -79,7 +79,7 @@ if not st.session_state.user:
                 st.session_state.user = user
                 st.rerun()
             else:
-                st.error("Hatalı giriş")
+                st.error("Hatalı kullanıcı adı veya şifre")
 
     with tab2:
         u = st.text_input("Kullanıcı adı", key="ru")
@@ -87,9 +87,9 @@ if not st.session_state.user:
         if st.button("Kayıt Ol"):
             user = register(u, p)
             if user:
-                st.success("Kayıt tamam, giriş yap")
+                st.success("Kayıt başarılı, giriş yap")
             else:
-                st.error("Bu kullanıcı adı dolu")
+                st.error("Bu kullanıcı adı alınmış")
 
     st.stop()
 
@@ -99,7 +99,7 @@ if not st.session_state.user:
 def load_chats():
     r = supabase.table("scribble_chats") \
         .select("*") \
-        .eq("id", st.session_state.user["id"]) \
+        .eq("user_id", st.session_state.user["id"]) \
         .order("created_at", desc=True) \
         .execute()
     return r.data or []
@@ -141,8 +141,8 @@ user_input = st.chat_input("Yaz bakalım...")
 if user_input:
     if not st.session_state.active_chat:
         chat = supabase.table("scribble_chats").insert({
-            "id": str(id.id4()),
-            "id": st.session_state.user["id"],
+            "id": str(uuid.uuid4()),
+            "user_id": st.session_state.user["id"],
             "title": user_input[:40]
         }).execute().data[0]
 
@@ -151,13 +151,16 @@ if user_input:
     chat_id = st.session_state.active_chat["id"]
 
     supabase.table("scribble_messages").insert({
-        "id": str(id.id4()),
+        "id": str(uuid.uuid4()),
         "chat_id": chat_id,
         "role": "user",
         "content": user_input
     }).execute()
 
-    st.session_state.messages.append({"role": "user", "content": user_input})
+    st.session_state.messages.append({
+        "role": "user",
+        "content": user_input
+    })
 
     payload = {
         "model": MODEL_NAME,
@@ -170,13 +173,16 @@ if user_input:
     reply = r.json()["choices"][0]["message"]["content"]
 
     supabase.table("scribble_messages").insert({
-        "id": str(id.id4()),
+        "id": str(uuid.uuid4()),
         "chat_id": chat_id,
         "role": "assistant",
         "content": reply
     }).execute()
 
-    st.session_state.messages.append({"role": "assistant", "content": reply})
+    st.session_state.messages.append({
+        "role": "assistant",
+        "content": reply
+    })
 
     with st.chat_message("assistant"):
         box = st.empty()
@@ -187,5 +193,3 @@ if user_input:
             time.sleep(0.01)
 
     st.rerun()
-
-
